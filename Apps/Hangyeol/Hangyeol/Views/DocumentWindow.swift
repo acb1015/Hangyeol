@@ -29,6 +29,8 @@ struct DocumentWindow: View {
     @State private var isDropTargeted = false
     @State private var dismissedSaveErrorID: String?
     @State private var exportProgress: ExportProgressPresentation?
+    /// Real preview 창만. 기본 `.preview` (NativePage). `.edit`은 기존 StructuredTextView.
+    @State private var contentMode: DocumentWindowContentMode = .preview
 
     private var chrome: DocumentChromeState {
         DocumentChromeState.make(
@@ -80,7 +82,7 @@ struct DocumentWindow: View {
                 Divider()
             }
 
-            switch Self.bodyKind(for: document) {
+            switch Self.bodyKind(for: document, contentMode: contentMode) {
             case .emptyState:
                 EmptyStateView(
                     recents: recents.items,
@@ -138,6 +140,18 @@ struct DocumentWindow: View {
                         .background(.quaternary, in: Capsule())
                         .accessibilityLabel(L10n.edited)
                         .accessibilityIdentifier("document-edited-badge")
+                }
+
+                if Self.showsContentModePicker(for: document) {
+                    Picker(L10n.contentMode, selection: $contentMode) {
+                        Text(L10n.contentPreview).tag(DocumentWindowContentMode.preview)
+                        Text(L10n.contentEdit).tag(DocumentWindowContentMode.edit)
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .accessibilityLabel(L10n.contentMode)
+                    .accessibilityIdentifier("document-content-mode")
+                    .help(L10n.contentMode)
                 }
 
                 Button {
@@ -516,27 +530,49 @@ struct DocumentWindow: View {
     }
 }
 
-/// DocumentWindow 본문 분기. 디버그 플래그 없이 세션 상태로만 결정한다.
+/// Real 미리보기 창의 Preview | Edit. Path B SVG는 캔버스 IME가 아니라 미리보기만.
+enum DocumentWindowContentMode: String, CaseIterable, Identifiable {
+    case preview
+    case edit
+
+    var id: String { rawValue }
+}
+
+/// DocumentWindow 본문 분기. 디버그 플래그 없이 세션 상태 + 보기 모드로 결정한다.
 enum DocumentWindowBodyKind: Equatable {
     /// 빈 문서 — `EmptyStateView`.
     case emptyState
-    /// Real + 열린 세션 (`canRenderPagePreview`) — NativePage 호스트.
+    /// Real + `canRenderPagePreview` + Preview — NativePage 호스트.
     case nativePageHost
-    /// Mock / closed / open failure — `StructuredTextView`.
+    /// Mock / 실패 폴백, 또는 Real Edit — `StructuredTextView`.
     case structuredText
 }
 
 extension DocumentWindow {
-    /// Real + `canRenderPagePreview` → NativePage host.
-    /// Mock / cannot preview / open failure → StructuredTextView (빈 창 아님).
-    static func bodyKind(for document: HangyeolDocument) -> DocumentWindowBodyKind {
+    /// Real + preview 가능일 때만 Preview | Edit 세그먼트를 보여 준다.
+    static func showsContentModePicker(for document: HangyeolDocument) -> Bool {
+        !document.model.isEmpty
+            && document.session.canRenderPagePreview
+            && document.session.lastOpenError == nil
+    }
+
+    /// 기본 `.preview` → NativePage. Real Edit / Mock / cannot preview / open failure → StructuredTextView.
+    static func bodyKind(
+        for document: HangyeolDocument,
+        contentMode: DocumentWindowContentMode = .preview
+    ) -> DocumentWindowBodyKind {
         if document.model.isEmpty {
             return .emptyState
         }
-        if document.session.canRenderPagePreview, document.session.lastOpenError == nil {
-            return .nativePageHost
+        guard showsContentModePicker(for: document) else {
+            return .structuredText
         }
-        return .structuredText
+        switch contentMode {
+        case .preview:
+            return .nativePageHost
+        case .edit:
+            return .structuredText
+        }
     }
 }
 

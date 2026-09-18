@@ -17,7 +17,7 @@ IA: [hop-ia-swiftui-draft.md](hop-ia-swiftui-draft.md) · 엔진: [renderer-spik
 
 ## 잠긴 계약
 
-1. **Injection** — 셸 `#50` `NativePageRenderHost` + `NativePageHostView`. 프론트 `RenderHostView(host:)`는 슬롯·placeholder·콜백만. 프론트는 NSView를 생성·래핑하지 않는다. 기본 UX: Real + `canRenderPagePreview` → NativePage.
+1. **Injection** — 셸 `#50` `NativePageRenderHost` + `NativePageHostView`. 프론트 `RenderHostView(host:)`는 슬롯·placeholder·콜백만. 프론트는 NSView를 생성·래핑하지 않는다. 기본 UX: Real Preview → NativePage. 같은 창 Edit → `StructuredTextView`.
 2. **Truth** — `DocumentSession` + `hg_engine*`. 찾기/선택/표는 세션 API. Views는 Kit/`RealEngine`/`postMessage` 금지. `listImages` 세션 확장 없음 (#44).
 3. **PDF/Print Phase1** — plainText `PDFExporter` / `PrintCoordinator`.
 
@@ -28,13 +28,13 @@ IA: [hop-ia-swiftui-draft.md](hop-ia-swiftui-draft.md) · 엔진: [renderer-spik
 ```
 DocumentGroup / HangyeolDocument
 └── DocumentWindow
-    ├── StructuredTextView                 Mock / cannot preview / open failure
-    └── RenderHostView(host:)              Real + canRenderPagePreview
+    ├── StructuredTextView                 Mock / fail 폴백, 또는 Real Edit
+    └── RenderHostView(host:)              Real Preview (기본)
             └── NativePageRenderHost       Render/ (#50)
                     └── NativePageHostView  page 0 SVG (`hg_render_page_svg`)
 ```
 
-`attach(document:)`는 그 창의 `DocumentSession`에만 붙는다. 미리보기도 그 세션의 `hg_engine*`만 (`EngineClient.current` 금지). Mock/closed → `StructuredTextView`. empty SVG → host placeholder.
+`attach(document:)`는 그 창의 `DocumentSession`에만 붙는다. 미리보기도 그 세션의 `hg_engine*`만 (`EngineClient.current` 금지). Mock/closed → `StructuredTextView` (세그먼트 숨김). empty SVG → host placeholder.
 
 ---
 

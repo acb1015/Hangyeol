@@ -343,15 +343,23 @@ final class NativePageRenderHostTests: XCTestCase {
         XCTAssertTrue(window.contains("NativePageHostFactory.renderHostView"))
         XCTAssertTrue(window.contains("StructuredTextView"))
         XCTAssertTrue(window.contains("bodyKind(for:"))
+        XCTAssertTrue(window.contains("contentMode"))
+        XCTAssertTrue(window.contains("showsContentModePicker"))
+        XCTAssertTrue(window.contains("DocumentWindowContentMode"))
+        XCTAssertTrue(window.contains("document-content-mode"))
+        XCTAssertTrue(window.contains("contentMode: DocumentWindowContentMode = .preview"))
     }
 
     func testDocumentWindowDefaultPathIsSessionPreviewNotHardcodedFalse() {
         let empty = HangyeolDocument()
         XCTAssertEqual(DocumentWindow.bodyKind(for: empty), .emptyState)
+        XCTAssertFalse(DocumentWindow.showsContentModePicker(for: empty))
 
         let mock = HangyeolDocument(model: MockEngine.sampleDocument())
         XCTAssertFalse(mock.session.canRenderPagePreview)
+        XCTAssertFalse(DocumentWindow.showsContentModePicker(for: mock))
         XCTAssertEqual(DocumentWindow.bodyKind(for: mock), .structuredText)
+        XCTAssertEqual(DocumentWindow.bodyKind(for: mock, contentMode: .edit), .structuredText)
 
         let live = PreviewLiveEngine(svg: Data("<svg xmlns='http://www.w3.org/2000/svg'/>".utf8))
         let real = HangyeolDocument(
@@ -359,7 +367,21 @@ final class NativePageRenderHostTests: XCTestCase {
             session: DocumentSession(engine: live)
         )
         XCTAssertTrue(real.session.canRenderPagePreview)
+        XCTAssertTrue(DocumentWindow.showsContentModePicker(for: real))
         XCTAssertEqual(DocumentWindow.bodyKind(for: real), .nativePageHost)
+        XCTAssertEqual(DocumentWindow.bodyKind(for: real, contentMode: .preview), .nativePageHost)
+    }
+
+    func testDocumentWindowEditModeUsesStructuredTextView() {
+        let live = PreviewLiveEngine(svg: Data("<svg xmlns='http://www.w3.org/2000/svg'/>".utf8))
+        let real = HangyeolDocument(
+            model: MockEngine.sampleDocument(),
+            session: DocumentSession(engine: live)
+        )
+        XCTAssertTrue(DocumentWindow.showsContentModePicker(for: real))
+        XCTAssertEqual(DocumentWindow.bodyKind(for: real, contentMode: .edit), .structuredText)
+        XCTAssertEqual(L10n.contentPreview, "미리보기")
+        XCTAssertEqual(L10n.contentEdit, "편집")
     }
 
     func testDocumentWindowFallsBackWhenPreviewUnavailable() {
@@ -368,6 +390,7 @@ final class NativePageRenderHostTests: XCTestCase {
             session: DocumentSession(engine: PreviewLiveEngine(svg: Data("<svg/>".utf8), isOpen: false))
         )
         XCTAssertFalse(closed.session.canRenderPagePreview)
+        XCTAssertFalse(DocumentWindow.showsContentModePicker(for: closed))
         XCTAssertEqual(DocumentWindow.bodyKind(for: closed), .structuredText)
 
         let live = PreviewLiveEngine(svg: Data("<svg/>".utf8), openError: HangyeolError.corrupt)
@@ -376,7 +399,9 @@ final class NativePageRenderHostTests: XCTestCase {
         XCTAssertNotNil(session.lastOpenError)
         XCTAssertTrue(session.canRenderPagePreview)
         let failedOpen = HangyeolDocument(model: MockEngine.sampleDocument(), session: session)
+        XCTAssertFalse(DocumentWindow.showsContentModePicker(for: failedOpen))
         XCTAssertEqual(DocumentWindow.bodyKind(for: failedOpen), .structuredText)
+        XCTAssertEqual(DocumentWindow.bodyKind(for: failedOpen, contentMode: .preview), .structuredText)
     }
 
     func testEmptySvgPreviewStaysOnHostPlaceholderNotBlankWindow() async throws {
