@@ -316,4 +316,17 @@ enum L10n {
             body
         )
     }
+    static let renderHostLabel = String(
+        localized: "render.host.label",
+        defaultValue: "문서 미리보기 영역"
+    )
+    static let renderHostPlaceholderTitle = String(
+        localized: "render.host.placeholder.title",
+        defaultValue: "렌더 화면 자리"
+    )
+    static let renderHostPlaceholderBody = String(
+        localized: "render.host.placeholder.body",
+        defaultValue: "rhwp 렌더(WKWebView)가 여기에 연결됩니다. 지금은 정보구조 합의용 스케치입니다."
+    )
+
 }
