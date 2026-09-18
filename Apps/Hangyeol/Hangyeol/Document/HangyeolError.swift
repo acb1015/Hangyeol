@@ -230,6 +230,7 @@ enum HangyeolOpenBytes {
 
     private static let zipLocal = Data([0x50, 0x4B, 0x03, 0x04])
     private static let zipEOCD = Data([0x50, 0x4B, 0x05, 0x06])
+    private static let oleMagic = Data([0xD0, 0xCF, 0x11, 0xE0])
 
     /// `nil` means Mock may continue (JSON snapshot or sample preview).
     static func mockFailure(for data: Data) -> HangyeolError? {
@@ -243,6 +244,11 @@ enum HangyeolOpenBytes {
             return .corrupt
         }
         return nil
+    }
+
+    /// ZIP (HWPX) or OLE (HWP) bytes. Mock must not decode these as a welcome preview.
+    static func looksLikeNativeDocumentContainer(_ data: Data) -> Bool {
+        data.starts(with: zipLocal) || data.starts(with: oleMagic)
     }
 
     /// Truncated ZIP (F16, no EOCD) or HWPX packaging break (F21: mimetype not first/STORE).

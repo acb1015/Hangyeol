@@ -113,7 +113,7 @@ HOP가 `UTType(filenameExtension: "hwpx")` 를 `net.golbin.hop.hwpx` (localizedD
 | 1 | UTI 정합 | 빌드된 `Hangyeol.app/Contents/Info.plist` 에 `org.hangyeol.hwpx` / `org.hangyeol.hwp` export, `UTImportedTypeDeclarations`에 `net.golbin.hop.hwpx` 등, `LSHandlerRank=Owner`, `LSSupportsOpeningDocumentsInPlace=true` | ☐ |
 | 2 | Finder에서 `fixtures/hub_hwpxlib_SimpleTable.hwpx` (hub-A) **더블클릭** | 한결이 기동·전면, DocumentGroup 창에 표 본문. Preview/한컴으로 가면 기본 앱 확인 | ☐ |
 | 2b | **충돌** HOP 설치 상태에서 hub-A 더블클릭 (한결로 열기) | HOP UTI로 태그돼도 한결 창이 열린다. “Hangul Word Processor XML document 포맷인 파일을 열 수 없습니다” **없음** | ☐ |
-| 3 | `.hwp` 더블클릭 | COMMIT_OK `.hwp` 가 없으면 번들 `Hangyeol/Resources/Sample/welcome.hwp` 를 Desktop에 복사해 사용. 한결 창이 열린다. F11 등 HOLD 바이너리 쓰지 말 것 | ☐ |
+| 3 | `.hwp` 더블클릭 | COMMIT_OK `.hwp` 없음 (F13 backlog). 번들 `welcome.mock.json`을 `.hwp`로 바꿔 쓰지 말 것 (Mock JSON ≠ Real). HOLD F11 금지. 있으면 Hangul F01만 | ☐ |
 | 4 | hub-A를 **실행 중** 한결 **Dock 아이콘**에 드롭 | 새 문서 창 (또는 기존 창에 열림). FileOpening 가드는 이 경로에 없음 — Info.plist 타입이 맞아야 함 | ☐ |
 | 5 | 한결이 **꺼진** 상태에서 같은 파일을 Dock / 앱 아이콘에 드롭 | 기동 + 해당 문서 창. 제자리 열기(in-place) — iCloud 아님, 샌드박스 user-selected | ☐ |
 | 6 | hub-A를 **문서 창** 위로 드롭 | 점선 오버레이(`L10n.dropToOpen`) 후 열림. `AppDelegate` `registerForDraggedTypes(.fileURL)` + SwiftUI `onDrop` | ☐ |

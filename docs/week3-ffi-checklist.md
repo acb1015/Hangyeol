@@ -31,7 +31,7 @@ HangyeolKit tracks the engine C ABI. Kit **RealEngine** is live. **`Apps/Hangyeo
 | Mechanism | How |
 |-----------|-----|
 | API | `EngineClient.resetToMock()` (process-level; keeps MockEngine working) |
-| Launch env | `HANGYEOL_USE_MOCK=1` (also `true` / `YES`) — Xcode scheme Environment Variables, or `open`/`launchctl` |
+| Launch env | **Default OFF.** `HANGYEOL_USE_MOCK=1` (also `true` / `YES`) only — Xcode scheme must not set this for normal Run |
 | UserDefaults | `defaults write app.hangyeol.mac HANGYEOL_USE_MOCK -bool YES` then relaunch |
 
 `resetToDefault()` restores the factory choice (Real if linked and not forced, else Mock).

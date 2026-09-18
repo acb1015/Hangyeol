@@ -50,6 +50,27 @@ enum DocumentFileType: String, Codable, Sendable, CaseIterable {
 struct DocumentMetadata: Codable, Equatable, Sendable {
     var title: String
     var sourceType: DocumentFileType
+    /// MockEngine JSON snapshot only. Never means a Real HWP/HWPX parse succeeded.
+    var isMockPreview: Bool
+
+    init(title: String, sourceType: DocumentFileType, isMockPreview: Bool = false) {
+        self.title = title
+        self.sourceType = sourceType
+        self.isMockPreview = isMockPreview
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case title
+        case sourceType
+        case isMockPreview
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        title = try container.decode(String.self, forKey: .title)
+        sourceType = try container.decode(DocumentFileType.self, forKey: .sourceType)
+        isMockPreview = try container.decodeIfPresent(Bool.self, forKey: .isMockPreview) ?? false
+    }
 }
 
 struct TextRun: Codable, Equatable, Sendable {

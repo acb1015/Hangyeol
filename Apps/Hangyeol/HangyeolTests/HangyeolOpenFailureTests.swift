@@ -56,10 +56,16 @@ final class HangyeolOpenFailureTests: XCTestCase {
             HangyeolError.unsupportedType(url.lastPathComponent).id,
             "unsupportedType:14_wrong_ext_hwpx.pdf"
         )
-        // Bytes are valid HWPX (detect ignores extension); Mock must not treat them as CORRUPT.
+        // Bytes are valid HWPX (detect ignores extension); Mock must not treat them as CORRUPT
+        // and must not fake-succeed as a welcome preview.
         let data = try Data(contentsOf: url)
         XCTAssertNil(HangyeolOpenBytes.mockFailure(for: data))
-        XCTAssertFalse(try MockEngine().open(data: data, type: .hwpx).isEmpty)
+        XCTAssertTrue(HangyeolOpenBytes.looksLikeNativeDocumentContainer(data))
+        XCTAssertThrowsError(try MockEngine().open(data: data, type: .hwpx)) { error in
+            guard case HangyeolError.notYetImplemented = error else {
+                return XCTFail("expected notYetImplemented, got \(error)")
+            }
+        }
     }
 
     func testSyntheticEncryptedMapsToEncryptedAndMockDoesNotSwallow() throws {
@@ -221,7 +227,12 @@ final class HangyeolOpenFailureTests: XCTestCase {
     func testValidHubSampleIsNotClassifiedAsOpenFailure() throws {
         let data = try RepoFixtures.data("hub_hwpxlib_SimpleTable.hwpx")
         XCTAssertNil(HangyeolOpenBytes.mockFailure(for: data))
-        XCTAssertFalse(try MockEngine().open(data: data, type: .hwpx).isEmpty)
+        XCTAssertTrue(HangyeolOpenBytes.looksLikeNativeDocumentContainer(data))
+        XCTAssertThrowsError(try MockEngine().open(data: data, type: .hwpx)) { error in
+            guard case HangyeolError.notYetImplemented = error else {
+                return XCTFail("Mock must not fake-succeed hub-A, got \(error)")
+            }
+        }
     }
 }
 

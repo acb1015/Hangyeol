@@ -1,7 +1,8 @@
 {
   "metadata" : {
-    "title" : "한결 샘플 문서",
-    "sourceType" : "hwpx"
+    "title" : "한결 Mock 미리보기",
+    "sourceType" : "hwpx",
+    "isMockPreview" : true
   },
   "blocks" : [
     {
@@ -16,7 +17,7 @@
       "paragraph" : {
         "id" : "aaaaaaaa-bbbb-4ccc-8ddd-000000000002",
         "runs" : [
-          { "text" : "이 화면은 실제 HWP 파서 없이 표시되는 1주차 미리보기입니다.", "isBold" : false, "isItalic" : false }
+          { "text" : "이 파일은 Mock JSON 미리보기입니다. Real HWPX 파서 성공이 아닙니다.", "isBold" : false, "isItalic" : false }
         ]
       }
     },
@@ -24,9 +25,7 @@
       "paragraph" : {
         "id" : "aaaaaaaa-bbbb-4ccc-8ddd-000000000003",
         "runs" : [
-          { "text" : "아래에서 ", "isBold" : false, "isItalic" : false },
-          { "text" : "간단한 표", "isBold" : true, "isItalic" : false },
-          { "text" : "를 확인할 수 있습니다.", "isBold" : false, "isItalic" : false }
+          { "text" : "DocumentGroup으로 연 HWPX처럼 취급하지 마세요.", "isBold" : false, "isItalic" : false }
         ]
       }
     },
@@ -46,14 +45,14 @@
             "id" : "aaaaaaaa-bbbb-4ccc-8ddd-000000000021",
             "cells" : [
               { "id" : "aaaaaaaa-bbbb-4ccc-8ddd-000000000022", "text" : "형식", "isHeader" : false },
-              { "id" : "aaaaaaaa-bbbb-4ccc-8ddd-000000000023", "text" : "HWPX", "isHeader" : false }
+              { "id" : "aaaaaaaa-bbbb-4ccc-8ddd-000000000023", "text" : "Mock JSON (HWPX 아님)", "isHeader" : false }
             ]
           },
           {
             "id" : "aaaaaaaa-bbbb-4ccc-8ddd-000000000031",
             "cells" : [
               { "id" : "aaaaaaaa-bbbb-4ccc-8ddd-000000000032", "text" : "엔진", "isHeader" : false },
-              { "id" : "aaaaaaaa-bbbb-4ccc-8ddd-000000000033", "text" : "MockEngine (1주차)", "isHeader" : false }
+              { "id" : "aaaaaaaa-bbbb-4ccc-8ddd-000000000033", "text" : "MockEngine (롤백)", "isHeader" : false }
             ]
           },
           {
@@ -63,14 +62,6 @@
               { "id" : "aaaaaaaa-bbbb-4ccc-8ddd-000000000043", "text" : "한국어", "isHeader" : false }
             ]
           }
-        ]
-      }
-    },
-    {
-      "paragraph" : {
-        "id" : "aaaaaaaa-bbbb-4ccc-8ddd-000000000004",
-        "runs" : [
-          { "text" : "파일 메뉴에서 문서를 열거나 샘플을 다시 불러올 수 있습니다.", "isBold" : false, "isItalic" : false }
         ]
       }
     }

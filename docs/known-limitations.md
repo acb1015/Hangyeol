@@ -9,7 +9,7 @@
 - **암호화/암호 문서**: 복호화하지 않는다. freeze `ENCRYPTED` → `HangyeolError.encrypted`.
 - **손상·미지원 열기**: freeze `CORRUPT` / `UNSUPPORTED_VERSION`과 앱 `unsupportedType`이 ErrorSheet로 올라온다 (`HangyeolError.corrupt` / `.unsupported` / `.unsupportedType` / `.emptyFile`).
 - **표·셀·문단**: 엔진이 받치는 서브셋만 편집한다 (`listTables` / `setCellText` / `insertText` / `deleteRange`). 이미지·메타는 앱에서 렌더하지 않으며, 엔진 목록 API는 [engine/image-meta.md](engine/image-meta.md)를 본다.
-- **Mock vs Real**: XCFramework가 있으면 `KitRealEngine`(Real)이 기본. 롤백: `EngineClient.resetToMock()`, 실행 환경 `HANGYEOL_USE_MOCK=1` (`true` / `YES`), UserDefaults `HANGYEOL_USE_MOCK`. 절차: [week3-ffi-checklist.md](week3-ffi-checklist.md).
+- **Mock vs Real**: 기본은 **Real + Vendor**. `HANGYEOL_USE_MOCK` 기본 **OFF** (미설정). 롤백만 `EngineClient.resetToMock()`, 환경 `1`/`true`/`YES`, UserDefaults. Mock JSON(`welcome.mock.json`, `isMockPreview`)을 Real HWPX 성공으로 적지 말 것. ZIP/OLE는 Mock이 미리보기로 바꾸지 않는다. 절차: [week3-ffi-checklist.md](week3-ffi-checklist.md).
 - **PDF/인쇄**: 문단+표 셀 `plainText`(구조화 텍스트)다. 한/글 조판 인쇄가 아니다.
 - **공증 / Sparkle / Quick Look**: MVP 밖. week-6 초안: [app/notarization-prep.md](app/notarization-prep.md). week-7/8 내부 배포·회귀: [app/week7-internal-regression.md](app/week7-internal-regression.md). 실제 공증은 owner가 ASC `.p8` + Team ID를 주기 전까지 **문서만**.
 
