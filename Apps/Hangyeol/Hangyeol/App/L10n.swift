@@ -326,7 +326,7 @@ enum L10n {
     )
     static let renderHostPlaceholderBody = String(
         localized: "render.host.placeholder.body",
-        defaultValue: "네이티브 렌더 페이지(SVG 미리보기)가 여기에 연결됩니다. 지금은 정보구조 합의용 스케치입니다."
+        defaultValue: "DocumentCore가 만든 SVG/페이지 미리보기가 여기에 연결됩니다. 지금은 정보구조 합의용 스케치입니다."
     )
 
     static let renderHostLoading = String(

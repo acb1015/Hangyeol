@@ -2,7 +2,7 @@ import CoreGraphics
 import Foundation
 
 /// 셸(개발자2)이 구현하는 렌더 호스트 계약. Views는 Kit/RealEngine을 직접 호출하지 않고 이것만 본다.
-/// Phase0: 프로토콜·콜백 스텁. Path B 네이티브 SVG/페이지 Representable 실체는 셸 소유 (studio WKWebView 임베드 아님).
+/// Phase0: 프로토콜·콜백 스텁. DocumentCore→SVG/PNG→네이티브 페이지 뷰(`NSViewRepresentable`) 실체는 셸 소유.
 @MainActor
 protocol HangyeolRenderHosting: AnyObject {
     func attach(document: HangyeolDocument) async throws

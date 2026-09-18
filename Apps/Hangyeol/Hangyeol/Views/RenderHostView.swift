@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// HOP/rhwp 렌더 본문 자리. Kit/Session/RealEngine을 직접 호출하지 않는다.
+/// Path B 렌더 본문 슬롯. Kit/Session/RealEngine을 직접 호출하지 않는다.
+/// 셸이 DocumentCore→SVG/PNG 네이티브 페이지 뷰를 content로 주입한다.
 /// - `host == nil`: 합의용 placeholder
-/// - `host != nil`: 콜백 구독 (실 렌더 페이지 뷰는 셸 Representable (Path B 네이티브 SVG))
+/// - `host != nil`: 콜백 구독 (실 네이티브 페이지 뷰는 셸 `NSViewRepresentable`(DocumentCore→SVG/PNG))
 struct RenderHostView: View {
     var host: (any HangyeolRenderHosting)?
     var onOpenFailure: ((HangyeolError) -> Void)? = nil

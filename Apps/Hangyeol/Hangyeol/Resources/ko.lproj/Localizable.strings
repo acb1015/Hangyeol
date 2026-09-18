@@ -136,7 +136,7 @@
 
 "render.host.label" = "문서 미리보기 영역";
 "render.host.placeholder.title" = "렌더 화면 자리";
-"render.host.placeholder.body" = "네이티브 렌더 페이지(SVG 미리보기)가 여기에 연결됩니다. 지금은 정보구조 합의용 스케치입니다.";
+"render.host.placeholder.body" = "DocumentCore가 만든 SVG/페이지 미리보기가 여기에 연결됩니다. 지금은 정보구조 합의용 스케치입니다.";
 
 "render.host.loading" = "문서 화면을 불러오는 중";
 
