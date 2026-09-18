@@ -309,23 +309,25 @@ fn hub_b_hg_render_then_keep_on_save() {
 
 fn cdylib_path() -> PathBuf {
     let exe = std::env::current_exe().expect("current_exe");
-    // cargo test binary: <target>/debug/deps/render_ffi-<hash>
-    let debug_dir = exe
-        .parent()
-        .and_then(Path::parent)
-        .expect("debug dir from test exe");
-    for name in [
+    // cargo test binary: <target>/<profile>/deps/render_ffi-<hash>
+    // cdylib often lands in deps/ as libhangyeol_engine.so (not top-level).
+    let deps = exe.parent().expect("deps dir from test exe");
+    let profile = deps.parent().unwrap_or(deps);
+    let names = [
         "libhangyeol_engine.so",
         "libhangyeol_engine.dylib",
         "hangyeol_engine.dll",
         "libhangyeol_engine.a",
-    ] {
-        let candidate = debug_dir.join(name);
-        if candidate.is_file() {
-            return candidate;
+    ];
+    for dir in [deps, profile] {
+        for name in names {
+            let candidate = dir.join(name);
+            if candidate.is_file() {
+                return candidate;
+            }
         }
     }
-    panic!("cdylib/staticlib not found next to {debug_dir:?} (exe {exe:?})");
+    panic!("cdylib/staticlib not found next to {deps:?} or {profile:?} (exe {exe:?})");
 }
 
 fn nm_defined_text(lib: &Path) -> String {
@@ -373,17 +375,17 @@ fn cargo_toml_does_not_default_native_skia() {
     let toml =
         std::fs::read_to_string(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml"))
             .expect("Cargo.toml");
-    let features = toml
-        .split("[features]")
-        .nth(1)
-        .and_then(|rest| rest.split('[').next())
-        .expect("[features]");
     assert!(
-        features.contains("default = []"),
-        "product default features must stay empty, got {features}"
+        toml.contains("default = []"),
+        "product default features must stay empty"
     );
     assert!(
-        features.contains("native-skia = [\"rhwp/native-skia\"]"),
+        !toml.contains("default = [\"native-skia\"]")
+            && !toml.contains("default = [\"svg-size-probe\""),
+        "native-skia / svg-size-probe must not be default features"
+    );
+    assert!(
+        toml.contains("native-skia = [\"rhwp/native-skia\"]"),
         "native-skia must remain an explicit opt-in"
     );
 }
