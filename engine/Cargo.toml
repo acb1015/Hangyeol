@@ -12,8 +12,19 @@ repository = "https://github.com/stupid1potato/Hangyeol"
 name = "hangyeol_engine"
 crate-type = ["cdylib", "rlib"]
 
+[features]
+default = []
+# §8 size-comparison only. Pulls DocumentCore SVG render into the staticlib.
+# Not the product XCFramework path. Do not enable for Vendor builds.
+svg-size-probe = []
+# Optional rhwp Skia/PNG size reference. Never default. Do not enable for Vendor.
+native-skia = ["rhwp/native-skia"]
+
 [dependencies]
 rhwp = { git = "https://github.com/edwardkim/rhwp.git", rev = "cac9b4f7cc743535cd7c00fe4f286abd67e7145b", default-features = false }
 
 [dev-dependencies]
+# Same pin as [dependencies]. Tests call DocumentCore render APIs directly
+# (not hg_*). Needed to name `rhwp::paint::RenderProfile`.
+rhwp = { git = "https://github.com/edwardkim/rhwp.git", rev = "cac9b4f7cc743535cd7c00fe4f286abd67e7145b", default-features = false }
 zip = { version = "2", default-features = false, features = ["deflate"] }
