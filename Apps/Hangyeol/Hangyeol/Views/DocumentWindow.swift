@@ -30,10 +30,6 @@ struct DocumentWindow: View {
     @State private var dismissedSaveErrorID: String?
     @State private var exportProgress: ExportProgressPresentation?
 
-    /// Phase1 Path B 플래그. `true`면 `RenderHostView(host:)` + 네이티브 페이지 호스트.
-    /// 기본 `false` — `StructuredTextView` 회귀 유지.
-    private let showsRenderHostSketch = false
-
     private var chrome: DocumentChromeState {
         DocumentChromeState.make(
             title: document.model.displayTitle,
@@ -84,19 +80,20 @@ struct DocumentWindow: View {
                 Divider()
             }
 
-            if document.model.isEmpty {
+            switch Self.bodyKind(for: document) {
+            case .emptyState:
                 EmptyStateView(
                     recents: recents.items,
                     onOpenSample: loadSample,
                     onOpenDocument: presentOpenPanel,
                     onOpenRecent: openRecent
                 )
-            } else if showsRenderHostSketch {
+            case .nativePageHost:
                 NativePageHostFactory.renderHostView(
                     document: document,
                     onOpenFailure: { presentedError = $0 }
                 )
-            } else {
+            case .structuredText:
                 StructuredTextView(
                     model: document.model,
                     canEditCells: document.session.canEditCells,
@@ -516,6 +513,30 @@ struct DocumentWindow: View {
         case .ready(let text):
             PrintCoordinator.print(text: text, jobTitle: document.model.displayTitle)
         }
+    }
+}
+
+/// DocumentWindow 본문 분기. 디버그 플래그 없이 세션 상태로만 결정한다.
+enum DocumentWindowBodyKind: Equatable {
+    /// 빈 문서 — `EmptyStateView`.
+    case emptyState
+    /// Real + 열린 세션 (`canRenderPagePreview`) — NativePage 호스트.
+    case nativePageHost
+    /// Mock / closed / open failure — `StructuredTextView`.
+    case structuredText
+}
+
+extension DocumentWindow {
+    /// Real + `canRenderPagePreview` → NativePage host.
+    /// Mock / cannot preview / open failure → StructuredTextView (빈 창 아님).
+    static func bodyKind(for document: HangyeolDocument) -> DocumentWindowBodyKind {
+        if document.model.isEmpty {
+            return .emptyState
+        }
+        if document.session.canRenderPagePreview, document.session.lastOpenError == nil {
+            return .nativePageHost
+        }
+        return .structuredText
     }
 }
 

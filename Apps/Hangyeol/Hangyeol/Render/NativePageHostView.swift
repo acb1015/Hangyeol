@@ -155,7 +155,7 @@ enum NativePageHostFactory {
         NativePageRenderHost()
     }
 
-    /// `showsRenderHostSketch == true`일 때 DocumentWindow 본문.
+    /// Real + `canRenderPagePreview`일 때 DocumentWindow 본문.
     @MainActor
     static func renderHostView(
         document: HangyeolDocument,

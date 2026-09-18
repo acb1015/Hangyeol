@@ -5,16 +5,21 @@ private final class PreviewLiveEngine: HangyeolLiveSession, @unchecked Sendable 
     var isOpen: Bool
     var svg: Data
     var renderError: Error?
+    var openError: Error?
     var pageIndexes: [UInt32] = []
 
-    init(svg: Data = Data(), isOpen: Bool = true, renderError: Error? = nil) {
+    init(svg: Data = Data(), isOpen: Bool = true, renderError: Error? = nil, openError: Error? = nil) {
         self.svg = svg
         self.isOpen = isOpen
         self.renderError = renderError
+        self.openError = openError
     }
 
     func open(data: Data, type: DocumentFileType) throws -> DocumentModel {
-        DocumentModel(
+        if let openError {
+            throw openError
+        }
+        return DocumentModel(
             metadata: DocumentMetadata(title: "live", sourceType: type),
             blocks: [.paragraph(ParagraphBlock(text: String(data: data, encoding: .utf8) ?? ""))]
         )
@@ -332,8 +337,62 @@ final class NativePageRenderHostTests: XCTestCase {
         XCTAssertFalse(kit.contains("import CHangyeolEngine"))
         XCTAssertFalse(kit.contains("hg_render_page_png"))
         XCTAssertTrue(kit.contains("kit.renderPageSvg"))
-        XCTAssertTrue(window.contains("private let showsRenderHostSketch = false"))
-        XCTAssertFalse(window.contains("showsRenderHostSketch = true"))
+        XCTAssertFalse(window.contains("showsRenderHostSketch"))
+        XCTAssertFalse(window.contains("private let showsRenderHostSketch = false"))
+        XCTAssertTrue(window.contains("canRenderPagePreview"))
+        XCTAssertTrue(window.contains("NativePageHostFactory.renderHostView"))
+        XCTAssertTrue(window.contains("StructuredTextView"))
+        XCTAssertTrue(window.contains("bodyKind(for:"))
+    }
+
+    func testDocumentWindowDefaultPathIsSessionPreviewNotHardcodedFalse() {
+        let empty = HangyeolDocument()
+        XCTAssertEqual(DocumentWindow.bodyKind(for: empty), .emptyState)
+
+        let mock = HangyeolDocument(model: MockEngine.sampleDocument())
+        XCTAssertFalse(mock.session.canRenderPagePreview)
+        XCTAssertEqual(DocumentWindow.bodyKind(for: mock), .structuredText)
+
+        let live = PreviewLiveEngine(svg: Data("<svg xmlns='http://www.w3.org/2000/svg'/>".utf8))
+        let real = HangyeolDocument(
+            model: MockEngine.sampleDocument(),
+            session: DocumentSession(engine: live)
+        )
+        XCTAssertTrue(real.session.canRenderPagePreview)
+        XCTAssertEqual(DocumentWindow.bodyKind(for: real), .nativePageHost)
+    }
+
+    func testDocumentWindowFallsBackWhenPreviewUnavailable() {
+        let closed = HangyeolDocument(
+            model: MockEngine.sampleDocument(),
+            session: DocumentSession(engine: PreviewLiveEngine(svg: Data("<svg/>".utf8), isOpen: false))
+        )
+        XCTAssertFalse(closed.session.canRenderPagePreview)
+        XCTAssertEqual(DocumentWindow.bodyKind(for: closed), .structuredText)
+
+        let live = PreviewLiveEngine(svg: Data("<svg/>".utf8), openError: HangyeolError.corrupt)
+        let session = DocumentSession(engine: live)
+        XCTAssertThrowsError(try session.open(data: Data("x".utf8), type: .hwpx))
+        XCTAssertNotNil(session.lastOpenError)
+        XCTAssertTrue(session.canRenderPagePreview)
+        let failedOpen = HangyeolDocument(model: MockEngine.sampleDocument(), session: session)
+        XCTAssertEqual(DocumentWindow.bodyKind(for: failedOpen), .structuredText)
+    }
+
+    func testEmptySvgPreviewStaysOnHostPlaceholderNotBlankWindow() async throws {
+        NativePageRaster.previewProvider = nil
+        let emptySvg = HangyeolDocument(
+            model: MockEngine.sampleDocument(),
+            session: DocumentSession(engine: PreviewLiveEngine(svg: Data()))
+        )
+        XCTAssertTrue(emptySvg.session.canRenderPagePreview)
+        XCTAssertEqual(DocumentWindow.bodyKind(for: emptySvg), .nativePageHost)
+        XCTAssertNil(NativePageRaster.preview(from: emptySvg))
+
+        let host = NativePageRenderHost()
+        try await host.attach(document: emptySvg)
+        XCTAssertEqual(host.surface, .placeholder)
+        XCTAssertTrue(host.isReady)
     }
 
     func testFactoryMakeHostStartsDetached() {

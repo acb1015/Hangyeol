@@ -12,17 +12,17 @@
 - **아님:** WKWebView, rhwp studio, postMessage bridge
 - 문서 진실: `DocumentSession` + `hg_engine*` 하나. 호스트는 파생 미리보기만
 - PDF/인쇄 Phase1: 현행 plainText exporter (**변경 없음**)
-- `showsRenderHostSketch` 기본 **false** → `StructuredTextView` 회귀 유지
+- **기본 UX:** Real + `canRenderPagePreview` → NativePage 호스트. Mock / closed / open failure → `StructuredTextView`. empty SVG / throw → host `.placeholder` (빈 창 아님). 디버그 플래그 없음.
 - listImages 세션 확장 없음 · Views 크롬/L10n 리라이트 없음 · notarytool 없음
 - **PNG FFI / native-skia 금지**
 
 ## 주입
 
-`DocumentWindow`가 비어 있지 않은 문서에서 플래그가 켜지면:
+`DocumentWindow`가 비어 있지 않은 문서에서 **Real + `canRenderPagePreview`**이면:
 
 `NativePageHostFactory.renderHostView(document:onOpenFailure:)` → `RenderHostView(host:)` + 오버레이로 셸 `NSViewRepresentable`.
 
-플래그 off(기본)에서는 호스트를 만들지 않고 기존 본문을 쓴다.
+Mock / cannot preview / open failure에서는 호스트를 만들지 않고 `StructuredTextView`를 쓴다. empty SVG / throw는 호스트 `.placeholder`(기존 빈 페이지+심볼)다.
 
 ## Page preview (`hg_render_page_svg`)
 
@@ -33,19 +33,20 @@
 
 | 상태 | 동작 |
 |------|------|
+| 빈 문서 (window) | `EmptyStateView`. 호스트를 만들지 않음 |
+| Mock / closed / `lastOpenError` (window) | `StructuredTextView` (빈 창 아님) |
+| Real + `canRenderPagePreview` (window) | `NativePageHostFactory.renderHostView` |
 | attach | `onLoadingChange(true → false)`. 성공 시 `onReady` |
-| 빈 문서 | `surface = empty`, 크래시 없음, `onOpenFailure` 없음 |
-| `session.lastOpenError` | `onOpenFailure` 후 throw. `surface = failed` |
-| Mock / closed / unavailable | `preview` → `nil` → host **`.placeholder`** |
+| `session.lastOpenError` (host) | `onOpenFailure` 후 throw. `surface = failed` |
 | Open Real, page 0 SVG non-empty | `.svg(data)` |
-| empty SVG / throw | `nil` → `.placeholder` |
+| empty SVG / throw | `preview` → `nil` → host **`.placeholder`** |
 | PNG/SVG bytes (테스트 주입) | `presentPageImage` / 주입 provider. SVG 디코드 실패 시 placeholder |
 | find/reveal | 표시용. 치환은 DocumentSession |
 
 경로: `DocumentSession.renderPageSvg(pageIndex:)` → `KitRealEngine` → Kit `RealEngine.renderPageSvg` → `hg_render_page_svg`.  
 버퍼는 기존 Kit `takeBuffer` / `hg_free_buffer`. 앱은 C 심볼을 새로 만들지 않고 PNG FFI를 열지 않는다.
 
-`showsRenderHostSketch`는 **기본 false**로 둔다 (이 배선이 플래그를 켜지 않음).
+제품 기본 UX는 Real 미리보기가 있으면 NativePage를 보여 준다. `showsRenderHostSketch = false` 같은 디버그 게이트는 없다.
 
 ## Vendor (Mac rebuild + `nm`)
 
