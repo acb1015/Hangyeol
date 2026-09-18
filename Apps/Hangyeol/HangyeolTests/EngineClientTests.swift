@@ -17,6 +17,16 @@ final class EngineClientTests: XCTestCase {
         let model = try EngineClient.current.open(data: Data("sample".utf8), type: .hwpx)
         XCTAssertFalse(model.isEmpty)
         XCTAssertTrue(model.plainText.contains("한결"))
+        XCTAssertTrue(model.metadata.isMockPreview)
+    }
+
+    func testMockEnvironmentDefaultIsOff() {
+        UserDefaults.standard.removeObject(forKey: EngineClient.useMockFlagKey)
+        XCTAssertFalse(UserDefaults.standard.bool(forKey: EngineClient.useMockFlagKey))
+        if ProcessInfo.processInfo.environment[EngineClient.useMockFlagKey] == nil {
+            XCTAssertFalse(EngineClient.environmentForcesMock)
+            XCTAssertFalse(EngineClient.prefersMock)
+        }
     }
 
     func testUserDefaultsFlagForcesMockInFactory() {

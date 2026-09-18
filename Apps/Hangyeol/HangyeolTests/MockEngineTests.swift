@@ -11,6 +11,7 @@ final class MockEngineTests: XCTestCase {
 
     func testNonEmptyUnknownDataReturnsKoreanParagraphsAndTable() throws {
         let model = try engine.open(data: Data("not-json".utf8), type: .hwpx)
+        XCTAssertTrue(model.metadata.isMockPreview)
         let paragraphs = model.blocks.compactMap { block -> String? in
             if case .paragraph(let paragraph) = block {
                 return paragraph.plainText
@@ -20,6 +21,7 @@ final class MockEngineTests: XCTestCase {
 
         XCTAssertTrue(paragraphs.contains(where: { $0.contains("한결") }))
         XCTAssertTrue(paragraphs.contains(where: { $0.contains("환영") }))
+        XCTAssertTrue(paragraphs.contains(where: { $0.contains("Mock") }))
 
         let tables = model.blocks.compactMap { block -> TableBlock? in
             if case .table(let table) = block {
@@ -33,11 +35,21 @@ final class MockEngineTests: XCTestCase {
         XCTAssertEqual(tables.first?.rows.first?.cells.first?.text, "항목")
     }
 
-    func testSampleDocumentHasKoreanTable() {
+    func testSampleDocumentHasKoreanTableAndMockPreviewFlag() {
         let sample = MockEngine.sampleDocument()
         XCTAssertFalse(sample.isEmpty)
         XCTAssertTrue(sample.plainText.contains("한국어"))
+        XCTAssertTrue(sample.metadata.isMockPreview)
         XCTAssertEqual(sample.metadata.sourceType, .hwpx)
+        XCTAssertTrue(sample.plainText.contains("Mock 미리보기"))
+    }
+
+    func testNativeZipContainerDoesNotFakeSucceed() throws {
+        let zip = Data([0x50, 0x4B, 0x03, 0x04, 0x00, 0x00])
+        XCTAssertTrue(HangyeolOpenBytes.looksLikeNativeDocumentContainer(zip))
+        XCTAssertThrowsError(try engine.open(data: zip, type: .hwpx)) { error in
+            XCTAssertEqual(error as? HangyeolError, .corrupt)
+        }
     }
 
     func testFailureMarkerThrows() {
@@ -67,5 +79,6 @@ final class MockEngineTests: XCTestCase {
         XCTAssertEqual(restored.blocks.count, original.blocks.count)
         XCTAssertEqual(restored.plainText, original.plainText)
         XCTAssertEqual(restored.metadata.sourceType, .hwpx)
+        XCTAssertTrue(restored.metadata.isMockPreview)
     }
 }

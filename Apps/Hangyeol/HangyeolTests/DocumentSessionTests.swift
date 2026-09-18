@@ -150,21 +150,18 @@ final class DocumentSessionTests: XCTestCase {
         XCTAssertTrue(reopened.session.isUsingMock)
     }
 
-    func testRealAdapterJSONFallbackBindsMockForThisDocument() throws {
+    func testRealAdapterDoesNotBindMockForWelcomeJSON() throws {
         let session = DocumentSession(engine: KitRealEngine())
         XCTAssertFalse(session.isUsingMock)
 
         let sample = MockEngine.sampleDocument()
         let json = try JSONEncoder().encode(sample)
-        let model = try session.open(data: json, type: .hwpx)
-
-        XCTAssertTrue(session.isUsingMock)
-        XCTAssertEqual(model.plainText, sample.plainText)
-        XCTAssertNil(session.lastOpenError)
-
-        let saved = try session.save(model, as: .hwpx)
-        let restored = try JSONDecoder().decode(DocumentModel.self, from: saved)
-        XCTAssertEqual(restored.plainText, sample.plainText)
+        XCTAssertThrowsError(try session.open(data: json, type: .hwpx)) { error in
+            let mapped = HangyeolError.mapOpenFailure(error)
+            XCTAssertNotEqual(mapped, .emptyFile)
+        }
+        XCTAssertFalse(session.isUsingMock)
+        XCTAssertNotNil(session.lastOpenError)
     }
 
     func testReplaceMarksDocumentDirtyOnBoundSession() throws {
@@ -460,15 +457,18 @@ final class DocumentSessionTests: XCTestCase {
         XCTAssertFalse(session.isUsingMock)
     }
 
-    func testUntitledLiveWithoutOpenFallsBackToMockJSON() throws {
+    func testUntitledLiveWithoutOpenDoesNotWriteMockJSON() throws {
         let live = FakeLiveEngine()
         live.isOpen = false
         let session = DocumentSession(engine: live)
         let model = MockEngine.sampleDocument()
-        let data = try session.save(model, as: .hwpx)
-        XCTAssertTrue(session.isUsingMock)
-        let restored = try JSONDecoder().decode(DocumentModel.self, from: data)
-        XCTAssertEqual(restored.plainText, model.plainText)
+        XCTAssertThrowsError(try session.save(model, as: .hwpx)) { error in
+            guard case HangyeolError.saveFailed = error else {
+                return XCTFail("expected saveFailed, got \(error)")
+            }
+        }
+        XCTAssertFalse(session.isUsingMock)
+        XCTAssertNotNil(session.lastSaveError)
     }
 
     func testMakeEngineAfterResetToMockIgnoresCurrentSingleton() {

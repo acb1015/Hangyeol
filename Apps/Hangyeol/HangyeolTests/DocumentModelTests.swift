@@ -24,8 +24,18 @@ final class DocumentModelTests: XCTestCase {
 
     func testJSONRoundTrip() throws {
         let original = MockEngine.sampleDocument()
+        XCTAssertTrue(original.metadata.isMockPreview)
         let data = try JSONEncoder().encode(original)
         let decoded = try JSONDecoder().decode(DocumentModel.self, from: data)
         XCTAssertEqual(decoded, original)
+        XCTAssertTrue(decoded.metadata.isMockPreview)
+    }
+
+    func testLegacyJSONWithoutMockFlagDecodesAsNotPreview() throws {
+        let json = Data("""
+        {"metadata":{"title":"구버전","sourceType":"hwpx"},"blocks":[]}
+        """.utf8)
+        let decoded = try JSONDecoder().decode(DocumentModel.self, from: json)
+        XCTAssertFalse(decoded.metadata.isMockPreview)
     }
 }

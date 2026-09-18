@@ -106,7 +106,7 @@ Debug = Automatic 서명 (로컬 개발). pbxproj의 `CODE_SIGN_STYLE` / Hardene
 |----|------|
 | hub-A | `fixtures/hub_hwpxlib_SimpleTable.hwpx` |
 | hub-B | `fixtures/hub_hwpxlib_SimplePicture.hwpx` |
-| Hangul 샘플 (번들) | `Apps/Hangyeol/Hangyeol/Resources/Sample/welcome.hwpx`, `welcome.hwp` (COMMIT_OK `.hwp` 없으면 Desktop에 복사) |
+| Hangul 샘플 (번들) | `Apps/Hangyeol/Hangyeol/Resources/Sample/welcome.mock.json`만. **`welcome.hwpx` / `welcome.hwp` 없음** (Mock JSON을 HWPX로 위장하던 함정 제거). Finder/Dock 더블클릭은 **hub-A** `fixtures/hub_hwpxlib_SimpleTable.hwpx`. COMMIT_OK `.hwp` 없음 (F13) |
 | Hangul 작성본 (UTI, 있으면) | owner Downloads `[양식1] …사업계획서_하베스트랩.hwpx` — HOP UTI여도 DocumentGroup이 연다 ([uti-finder-dock-smoke.md](uti-finder-dock-smoke.md) 충돌 절) |
 
 토큰은 엔진 게이트와 동일: insert `HGINS99`, delete `HGDEL99`(길이 7), 셀 `HGSET99`, 치환 `1`→`HGPOC99`.
@@ -116,7 +116,7 @@ Debug = Automatic 서명 (로컬 개발). pbxproj의 `CODE_SIGN_STYLE` / Hardene
 | B1 | scheme `Hangyeol` Debug `xcodebuild` build | 성공. Mock 폴백이어도 앱은 기동 | 둘 다 | ☐ |
 | B2 | hub-A 열기 | 표 본문 창. HOP 설치 시 “Hangul Word Processor XML document 포맷…” **없음** | Real 권장 | ☐ |
 | B3 | hub-B 열기 | 창 열림. **그림은 화면에 안 그려도 됨** (frontend). 셸은 열기만 | Real | ☐ |
-| B4 | Hangul 샘플 `welcome.hwpx` / `welcome.hwp` 열기 | 창 열림. `.hwp` 저장은 `.saveRejected` | Mock 열기 OK | ☐ |
+| B4 | 번들 `welcome.mock.json` — 샘플 메뉴 / `MockEngine.loadBundledSample`만 | `isMockPreview` Mock 미리보기. **Finder 더블클릭 대상 아님** (확장자 `.json`). DocumentGroup이 이 JSON을 `.hwpx`로 열어 Real 성공처럼 보이면 **실패** | Mock only | ☐ |
 | E1 | hub-A 첫 문단 insert `HGINS99` 후 HWPX 저장 | 본문에 토큰. `hp:linesegarray` = 0 (clear-before-save) | **Real** | ☐ |
 | E2 | hub-A delete `HGDEL99` (seed 후 7자) | 토큰 사라짐. 다른 셀(`2`,`5`) 유지 | **Real** | ☐ |
 | E3 | hub-A 표 셀 `(0,0)` ← `HGSET99` | 셀 평문에 토큰. 저장 왕복 | **Real** | ☐ |

@@ -170,5 +170,23 @@ final class HangyeolDocumentTests: XCTestCase {
         XCTAssertTrue(document.session.isUsingMock)
         XCTAssertFalse(document.model.isEmpty)
         XCTAssertEqual(document.model.metadata.title, "singleton-clobber")
+        XCTAssertTrue(document.model.metadata.isMockPreview)
+    }
+
+    func testOpeningWelcomeJSONThroughRealDoesNotLookLikeSuccess() throws {
+        let json = try JSONEncoder().encode(MockEngine.sampleDocument())
+        if KitRealEngine.isAvailable && !EngineClient.prefersMock {
+            XCTAssertThrowsError(
+                try HangyeolDocument(opening: json, type: .hwpx, filename: "welcome.hwpx")
+            )
+        } else {
+            let document = try HangyeolDocument(
+                opening: json,
+                type: .hwpx,
+                filename: "welcome.hwpx"
+            )
+            XCTAssertTrue(document.session.isUsingMock)
+            XCTAssertTrue(document.model.metadata.isMockPreview)
+        }
     }
 }

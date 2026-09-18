@@ -1,7 +1,8 @@
 import Foundation
 
-/// 문서 엔진 경계. 기본값은 XCFramework가 연결된 Real(`KitRealEngine`);
-/// 없으면 `MockEngine`. `resetToMock()`과 `HANGYEOL_USE_MOCK`으로 롤백 가능.
+/// 문서 엔진 경계. **기본값은 Real + Vendor XCFramework** (`KitRealEngine`).
+/// `HANGYEOL_USE_MOCK` 기본은 **OFF** (미설정 / `0` / `false` / `NO`).
+/// 롤백만 `resetToMock()` · 환경 `1`/`true`/`YES` · UserDefaults. XCFramework가 없으면 Mock 폴백.
 protocol HangyeolEngine: Sendable {
     func open(data: Data, type: DocumentFileType) throws -> DocumentModel
     func save(_ model: DocumentModel, as type: DocumentFileType) throws -> Data
@@ -101,11 +102,13 @@ enum EngineClient {
         current = makeDefaultEngine()
     }
 
+    /// Default **OFF**. Only `1` / `true` / `YES` (env) or UserDefaults true force Mock.
     static var prefersMock: Bool {
         if environmentForcesMock { return true }
         return UserDefaults.standard.bool(forKey: useMockFlagKey)
     }
 
+    /// Missing env, `0`, `false`, `NO` → false (Real+Vendor default).
     static var environmentForcesMock: Bool {
         guard let raw = ProcessInfo.processInfo.environment[useMockFlagKey] else {
             return false

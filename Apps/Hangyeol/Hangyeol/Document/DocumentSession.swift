@@ -97,18 +97,7 @@ final class DocumentSession: ObservableObject, Identifiable, @unchecked Sendable
         do {
             lastOpenError = nil
             let model = try withEngine { engine in
-                do {
-                    return try engine.open(data: data, type: type)
-                } catch {
-                    guard engine is KitRealEngine, Self.looksLikeMockJSON(data) else {
-                        throw error
-                    }
-                    // Mock JSON .hwpx (untitled save / bundled sample) while
-                    // the factory default is Real: bind this document to Mock.
-                    let mock = MockEngine()
-                    self.engine = mock
-                    return try mock.open(data: data, type: type)
-                }
+                try engine.open(data: data, type: type)
             }
             clearUndoHistory()
             return model
@@ -132,20 +121,18 @@ final class DocumentSession: ObservableObject, Identifiable, @unchecked Sendable
         }
         do {
             lastSaveError = nil
-            let (data, droppedLiveSession) = try withEngine { engine -> (Data, Bool) in
+            let data = try withEngine { engine -> Data in
                 if let live = engine as? any HangyeolLiveSession, !live.isOpen {
-                    // Untitled Real has no DocumentCore IR yet; Mock JSON so
-                    // Save As .hwpx still round-trips. Not a re-encode of live IR.
-                    self.engine = MockEngine()
-                    return (try self.engine.save(model, as: type), true)
+                    // Untitled Real has no DocumentCore IR. Do not write Mock
+                    // JSON under a .hwpx name (looks like Real success on reopen).
+                    throw HangyeolError.saveFailed(String(
+                        localized: "error.engine.untitledRealSave",
+                        defaultValue: "엔진 세션이 없는 새 문서는 HWPX로 저장할 수 없습니다."
+                    ))
                 }
-                return (try engine.save(model, as: type), false)
+                return try engine.save(model, as: type)
             }
-            if droppedLiveSession {
-                clearUndoHistory()
-            } else {
-                undoBaselineDelta = 0
-            }
+            undoBaselineDelta = 0
             return data
         } catch {
             let mapped = HangyeolError.mapSaveFailure(error)
@@ -396,8 +383,4 @@ final class DocumentSession: ObservableObject, Identifiable, @unchecked Sendable
         return try body(engine)
     }
 
-    /// App JSON snapshots written by Mock / untitled-without-IR.
-    private static func looksLikeMockJSON(_ data: Data) -> Bool {
-        (try? JSONDecoder().decode(DocumentModel.self, from: data)) != nil
-    }
 }
