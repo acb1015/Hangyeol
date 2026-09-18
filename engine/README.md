@@ -8,7 +8,7 @@ Thin Rust **cdylib** wrapping **`rhwp::document_core::DocumentCore`** only.
 - parser / serial / edit via DocumentCore
 - **no** Hangyeol-owned OLE/HWP binary parser
 - **no** ZIP/XML hand-edit product path
-- **no** renderer / layout / WASM UI exports
+- **no** renderer / layout / WASM UI exports (product ABI today). Completion-track design: [renderer-spike-1pager.md](../docs/engine/renderer-spike-1pager.md)
 
 Pinned rhwp git rev (verified in this crate):
 `cac9b4f7cc743535cd7c00fe4f286abd67e7145b`

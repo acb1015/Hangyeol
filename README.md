@@ -10,7 +10,7 @@ macOS 14+ 네이티브 앱. `.hwp` / `.hwpx` 열기 · 본문·표 수정 · HWP
 - Engine (Week1): [rhwp 코어 서브셋 게이트 표](docs/rhwp-core-subset-gate.md)
 - Engine: [Apple Silicon XCFramework / staticlib](docs/engine/xcframework.md) · [Vendor rebuild (symbols)](docs/engine/vendor-rebuild.md)
 - Engine (Week3): [FFI 체크리스트 (앱 링크 · Mock→Real)](docs/week3-ffi-checklist.md)
-- Engine: [image-meta list](docs/engine/image-meta.md) · [known limitations](docs/known-limitations.md)
+- Engine: [image-meta list](docs/engine/image-meta.md) · [known limitations](docs/known-limitations.md) · [renderer spike 1-pager](docs/engine/renderer-spike-1pager.md)
 - App (Week5): [UTI / Finder / Dock smoke](docs/app/uti-finder-dock-smoke.md)
 - App (Week6): [공증 준비 체크리스트 초안](docs/app/notarization-prep.md)
 - App (Week7/8): [내부 배포 · 회귀 체크리스트](docs/app/week7-internal-regression.md)

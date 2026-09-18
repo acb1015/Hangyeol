@@ -13,7 +13,7 @@
 
 ## 금지
 
-- 렌더러 · 조판 · WASM UI 임베드 없음.
+- 렌더러 · 조판 · WASM UI 임베드 없음. *(당시 freeze. 2026-09-18 팀장: 금지 해제, 설계 우선 — [renderer-spike-1pager.md](engine/renderer-spike-1pager.md). 이 문서는 2026-09-10 엔진 범위 기록.)*
 - ZIP/XML 폴백 **제품화 금지** (스파이크 증거일 뿐 제품 엔진이 되면 안 됨).
 
 ## Mac 한/글 큐
