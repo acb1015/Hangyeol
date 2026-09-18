@@ -31,6 +31,9 @@ enum L10n {
     static let retryOpen = String(localized: "action.retryOpen", defaultValue: "다시 열기")
     static let cancel = String(localized: "action.cancel", defaultValue: "취소")
     static let edited = String(localized: "chrome.edited", defaultValue: "편집됨")
+    static let contentMode = String(localized: "chrome.contentMode", defaultValue: "미리보기와 편집")
+    static let contentPreview = String(localized: "chrome.contentPreview", defaultValue: "미리보기")
+    static let contentEdit = String(localized: "chrome.contentEdit", defaultValue: "편집")
 
     static let help = String(localized: "menu.help", defaultValue: "한결 도움말")
     static let about = String(localized: "menu.about", defaultValue: "한결 정보")

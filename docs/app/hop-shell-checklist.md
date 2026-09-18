@@ -9,8 +9,8 @@ Path B = `DocumentCore` → UTF-8 SVG (`hg_render_page_svg`) → **SwiftUI/AppKi
 
 상태 값: **DONE** / **PARTIAL** / **TODO**.
 
-프론트 IA 스케치(PR **#46**): [hop-ia-swiftui-draft.md](hop-ia-swiftui-draft.md) · `RenderHostView` + `showsRenderHostSketch = false`.  
-호스트 구현(PR **#50**): [native-page-host-phase1.md](native-page-host-phase1.md) · `Render/NativePageRenderHost`.
+프론트 IA 스케치(PR **#46**): [hop-ia-swiftui-draft.md](hop-ia-swiftui-draft.md) · `RenderHostView`.  
+호스트 구현(PR **#50**): [native-page-host-phase1.md](native-page-host-phase1.md) · `Render/NativePageRenderHost`. 기본 UX: Real Preview → NativePage. Edit → StructuredTextView.
 
 ---
 
@@ -35,7 +35,7 @@ Path B = `DocumentCore` → UTF-8 SVG (`hg_render_page_svg`) → **SwiftUI/AppKi
 | Multi-window | `windows.rs` `create_editor_window` / `create_editor_window_with_label`; `commands.rs` `create_editor_window` | `DocumentGroup` 네이티브 문서 창. 창마다 `DocumentSession` | **DONE** |
 | PDF | `pdf_export.rs` + `commands.rs` `export_pdf` / `export_pdf_from_hwp_path` (native SVG→PDF) | Phase1: `PDFExporter` **plainText**. 웹뷰 인쇄/SVG PDF 교체 **없음** | **PARTIAL** |
 | Print | `commands.rs` `print_webview` (`WebviewWindow.print`) | Phase1: `PrintCoordinator` **plainText** `NSPrintOperation`. HOP webview print 안 씀 | **PARTIAL** |
-| 렌더 본문 | studio-host 웹 에디터 + Tauri webview | **Path B** `#50` `Render/NativePageRenderHost` + `NativePageHostView`. 제품 미리보기는 **이 문서 세션**의 `hg_render_page_svg` (`NativePageRaster`). Mock→placeholder. WKWebView / PNG / skia 금지. `showsRenderHostSketch = false` 기본 | **DONE** (SVG wire) |
+| 렌더 본문 | studio-host 웹 에디터 + Tauri webview | **Path B** `#50` `Render/NativePageRenderHost` + `NativePageHostView`. Real Preview → NativePage (`hg_render_page_svg`). 같은 창 Edit → `StructuredTextView`. Mock/fail → 세그먼트 숨김 + StructuredText. WKWebView / PNG / skia 금지 | **DONE** (Preview \| Edit) |
 | UTI / 파일 연결 | HOP export `net.golbin.hop.hwp` / `.hwpx` | Hangyeol **Owner** `org.hangyeol.*` + HOP UTI **import**. [uti-finder-dock-smoke.md](uti-finder-dock-smoke.md) | **DONE** |
 | 공증 | HOP는 자격 후 signed/notarized dmg (DEVELOPMENT.md) | 문서만. owner `.p8`+Team ID 전까지 실행 금지 | **TODO** (docs) |
 
@@ -67,4 +67,4 @@ Live 회귀(insert/delete/표/`listImages`)는 Real만 SMOKE_OK. [week7-internal
 
 1. HOP식 sibling temp + rename 저장 (샌드박스 제자리 저장과 맞출 것)
 2. Owner 자격 후 공증 실행
-3. `showsRenderHostSketch`를 켤지는 frontend / 팀장 게이트 (셸 기본은 **false**)
+3. 찾기/표 UX를 렌더 세션 API에 맞추는 큰 리라이트 (이 PR 밖)

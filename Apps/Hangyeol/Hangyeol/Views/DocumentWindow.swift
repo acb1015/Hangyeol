@@ -29,10 +29,8 @@ struct DocumentWindow: View {
     @State private var isDropTargeted = false
     @State private var dismissedSaveErrorID: String?
     @State private var exportProgress: ExportProgressPresentation?
-
-    /// Phase1 Path B 플래그. `true`면 `RenderHostView(host:)` + 네이티브 페이지 호스트.
-    /// 기본 `false` — `StructuredTextView` 회귀 유지.
-    private let showsRenderHostSketch = false
+    /// Real preview 창만. 기본 `.preview` (NativePage). `.edit`은 기존 StructuredTextView.
+    @State private var contentMode: DocumentWindowContentMode = .preview
 
     private var chrome: DocumentChromeState {
         DocumentChromeState.make(
@@ -84,19 +82,20 @@ struct DocumentWindow: View {
                 Divider()
             }
 
-            if document.model.isEmpty {
+            switch Self.bodyKind(for: document, contentMode: contentMode) {
+            case .emptyState:
                 EmptyStateView(
                     recents: recents.items,
                     onOpenSample: loadSample,
                     onOpenDocument: presentOpenPanel,
                     onOpenRecent: openRecent
                 )
-            } else if showsRenderHostSketch {
+            case .nativePageHost:
                 NativePageHostFactory.renderHostView(
                     document: document,
                     onOpenFailure: { presentedError = $0 }
                 )
-            } else {
+            case .structuredText:
                 StructuredTextView(
                     model: document.model,
                     canEditCells: document.session.canEditCells,
@@ -141,6 +140,18 @@ struct DocumentWindow: View {
                         .background(.quaternary, in: Capsule())
                         .accessibilityLabel(L10n.edited)
                         .accessibilityIdentifier("document-edited-badge")
+                }
+
+                if Self.showsContentModePicker(for: document) {
+                    Picker(L10n.contentMode, selection: $contentMode) {
+                        Text(L10n.contentPreview).tag(DocumentWindowContentMode.preview)
+                        Text(L10n.contentEdit).tag(DocumentWindowContentMode.edit)
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .accessibilityLabel(L10n.contentMode)
+                    .accessibilityIdentifier("document-content-mode")
+                    .help(L10n.contentMode)
                 }
 
                 Button {
@@ -515,6 +526,52 @@ struct DocumentWindow: View {
             printFailure.present(.printEmptyDocument, retry: presentOpenPanel)
         case .ready(let text):
             PrintCoordinator.print(text: text, jobTitle: document.model.displayTitle)
+        }
+    }
+}
+
+/// Real 미리보기 창의 Preview | Edit. Path B SVG는 캔버스 IME가 아니라 미리보기만.
+enum DocumentWindowContentMode: String, CaseIterable, Identifiable {
+    case preview
+    case edit
+
+    var id: String { rawValue }
+}
+
+/// DocumentWindow 본문 분기. 디버그 플래그 없이 세션 상태 + 보기 모드로 결정한다.
+enum DocumentWindowBodyKind: Equatable {
+    /// 빈 문서 — `EmptyStateView`.
+    case emptyState
+    /// Real + `canRenderPagePreview` + Preview — NativePage 호스트.
+    case nativePageHost
+    /// Mock / 실패 폴백, 또는 Real Edit — `StructuredTextView`.
+    case structuredText
+}
+
+extension DocumentWindow {
+    /// Real + preview 가능일 때만 Preview | Edit 세그먼트를 보여 준다.
+    static func showsContentModePicker(for document: HangyeolDocument) -> Bool {
+        !document.model.isEmpty
+            && document.session.canRenderPagePreview
+            && document.session.lastOpenError == nil
+    }
+
+    /// 기본 `.preview` → NativePage. Real Edit / Mock / cannot preview / open failure → StructuredTextView.
+    static func bodyKind(
+        for document: HangyeolDocument,
+        contentMode: DocumentWindowContentMode = .preview
+    ) -> DocumentWindowBodyKind {
+        if document.model.isEmpty {
+            return .emptyState
+        }
+        guard showsContentModePicker(for: document) else {
+            return .structuredText
+        }
+        switch contentMode {
+        case .preview:
+            return .nativePageHost
+        case .edit:
+            return .structuredText
         }
     }
 }

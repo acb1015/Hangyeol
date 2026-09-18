@@ -42,7 +42,7 @@ DocumentWindow
 │   └── RenderHostView      ★ 본문 슬롯 (크롬·a11y·placeholder)
 │       ├── host: HangyeolRenderHosting?   # 셸 주입
 │       │     └── 네이티브 페이지 뷰         # DocumentCore→SVG/PNG · NSViewRepresentable
-│       └── (fallback) StructuredTextView  # showsRenderHostSketch=false 시 현행
+│       └── (fallback) StructuredTextView  # Mock/fail, 또는 Real Edit
 └── Sheets                  (Error / SaveFailure / ExportProgress / Help)
 ```
 
@@ -79,9 +79,10 @@ DocumentSession이 문서 진실. 페이지 SVG는 **그 세션**의 `hg_engine*
 
 ### RenderHostView 계약
 
-- `showsRenderHostSketch == false`(기본) → `StructuredTextView`
-- `true` → `RenderHostView(host:)` — `host == nil`이면 placeholder
-- 프론트는 셸이 주입하는 네이티브 페이지 뷰를 **직접 감싸지 않음**
+- Real Preview (기본, `canRenderPagePreview`) → `RenderHostView(host:)` + NativePage
+- Real Edit → 같은 창 `StructuredTextView` + 세션 API (Path B는 캔버스 IME 아님)
+- Mock / cannot preview / open failure → 세그먼트 숨김 + `StructuredTextView`
+- `host == nil`이면 placeholder. 프론트는 셸이 주입하는 네이티브 페이지 뷰를 **직접 감싸지 않음**
 
 ## 6. 단계
 

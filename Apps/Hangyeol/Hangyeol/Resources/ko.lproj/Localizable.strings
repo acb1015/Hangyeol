@@ -27,6 +27,9 @@
 "action.retryOpen" = "다시 열기";
 "action.cancel" = "취소";
 "chrome.edited" = "편집됨";
+"chrome.contentMode" = "미리보기와 편집";
+"chrome.contentPreview" = "미리보기";
+"chrome.contentEdit" = "편집";
 
 "menu.help" = "한결 도움말";
 "menu.about" = "한결 정보";
