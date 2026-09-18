@@ -1,33 +1,81 @@
 import SwiftUI
 
-/// HOP/rhwp 렌더 본문을 담을 호스트 자리.
-/// - 기본: 비활성 → `DocumentWindow`가 `StructuredTextView`를 그대로 씀.
-/// - 활성: 개발자2가 WKWebView 등 `content`를 주입.
-/// Kit/Session/RealEngine을 직접 호출하지 않는다.
-struct RenderHostView<Content: View>: View {
-    /// `false`(기본)면 호출측에서 StructuredTextView를 쓴다.
-    var isActive: Bool = false
-    @ViewBuilder var content: () -> Content
+/// HOP/rhwp 렌더 본문 자리. Kit/Session/RealEngine을 직접 호출하지 않는다.
+/// - `host == nil`: 합의용 placeholder
+/// - `host != nil`: 콜백 구독 (실 렌더 페이지 뷰는 셸 Representable (Path B 네이티브 SVG))
+struct RenderHostView: View {
+    var host: (any HangyeolRenderHosting)?
+    var onOpenFailure: ((HangyeolError) -> Void)? = nil
+
+    @State private var isReady = false
+    @State private var isLoading = false
 
     var body: some View {
         Group {
-            if isActive {
-                content()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .accessibilityElement(children: .contain)
-                    .accessibilityLabel(L10n.renderHostLabel)
-                    .accessibilityIdentifier("render-host-view")
+            if let host {
+                hostChrome(host: host)
             } else {
-                EmptyView()
+                RenderHostPlaceholder()
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(L10n.renderHostLabel)
+        .accessibilityIdentifier("render-host-view")
+        .onAppear { wireCallbacks() }
+        .onChange(of: hostIdentity) { _, _ in wireCallbacks() }
+    }
+
+    /// Phase0: 셸 Representable이 붙기 전엔 상태·콜백만.
+    @ViewBuilder
+    private func hostChrome(host: any HangyeolRenderHosting) -> some View {
+        ZStack {
+            Color(nsColor: .textBackgroundColor)
+            if isLoading || !isReady {
+                ProgressView()
+                    .controlSize(.regular)
+                    .accessibilityLabel(L10n.renderHostLoading)
+            }
+        }
+        .accessibilityIdentifier("render-host-live-stub")
+        .accessibilityValue(isReady ? L10n.renderHostReady : L10n.renderHostLoading)
+    }
+
+    private var hostIdentity: ObjectIdentifier? {
+        host.map { ObjectIdentifier($0) }
+    }
+
+    private func wireCallbacks() {
+        guard let host else {
+            isReady = false
+            isLoading = false
+            return
+        }
+        isReady = host.isReady
+        host.onReady = {
+            Task { @MainActor in
+                isReady = true
+                isLoading = false
+            }
+        }
+        host.onLoadingChange = { loading in
+            Task { @MainActor in
+                isLoading = loading
+            }
+        }
+        host.onOpenFailure = { error in
+            Task { @MainActor in
+                onOpenFailure?(error)
+            }
+        }
+        // selection / viewport는 Phase2 크롬 연동 시 DocumentWindow가 구독.
     }
 }
 
-extension RenderHostView where Content == RenderHostPlaceholder {
-    /// 주입 전 스케치용 placeholder.
-    static var placeholder: RenderHostView<RenderHostPlaceholder> {
-        RenderHostView(isActive: true) { RenderHostPlaceholder() }
+extension RenderHostView {
+    /// 주입 전 스케치.
+    static var placeholder: RenderHostView {
+        RenderHostView(host: nil)
     }
 }
 
