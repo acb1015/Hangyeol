@@ -148,6 +148,16 @@ final class KitRealEngine: HangyeolLiveSession, @unchecked Sendable {
         }
     }
 
+    /// Read-only page SVG on **this** Kit `RealEngine` / `hg_engine*`.
+    /// Kit `takeBuffer` already `hg_free_buffer`s the FFI allocation.
+    func renderPageSvg(pageIndex: UInt32) throws -> Data {
+        do {
+            return try kit.renderPageSvg(pageIndex: pageIndex)
+        } catch {
+            throw Self.mapError(error)
+        }
+    }
+
     /// Kit concatenates body + table-cell paragraphs with `\n`.
     static func documentModel(
         fromPlainText text: String,

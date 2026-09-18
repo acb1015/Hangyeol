@@ -4,7 +4,7 @@
 참고: [golbin/hop](https://github.com/golbin/hop) **셸 패턴만**. 소스를 벤더하지 않는다. **Tauri로 바꾸지 않는다.**
 
 **렌더 경로 (팀장3 LOCKED):** Hangyeol 제품 임베드는 HOP의 rhwp studio **webview가 아니다.**  
-Path B = `DocumentCore` → SVG/PNG 페이지 래스터 → **SwiftUI/AppKit NativePageHost**.  
+Path B = `DocumentCore` → UTF-8 SVG (`hg_render_page_svg`) → **SwiftUI/AppKit NativePageHost**. PNG / native-skia 없음.  
 상세: [renderer-embed-slot.md](renderer-embed-slot.md).
 
 상태 값: **DONE** / **PARTIAL** / **TODO**.
@@ -35,7 +35,7 @@ Path B = `DocumentCore` → SVG/PNG 페이지 래스터 → **SwiftUI/AppKit Nat
 | Multi-window | `windows.rs` `create_editor_window` / `create_editor_window_with_label`; `commands.rs` `create_editor_window` | `DocumentGroup` 네이티브 문서 창. 창마다 `DocumentSession` | **DONE** |
 | PDF | `pdf_export.rs` + `commands.rs` `export_pdf` / `export_pdf_from_hwp_path` (native SVG→PDF) | Phase1: `PDFExporter` **plainText**. 웹뷰 인쇄/SVG PDF 교체 **없음** | **PARTIAL** |
 | Print | `commands.rs` `print_webview` (`WebviewWindow.print`) | Phase1: `PrintCoordinator` **plainText** `NSPrintOperation`. HOP webview print 안 씀 | **PARTIAL** |
-| 렌더 본문 | studio-host 웹 에디터 + Tauri webview | **Path B** `#50` `Render/NativePageRenderHost` + `NativePageHostView`가 `#48` `HangyeolRenderHosting`을 구현. WKWebView 금지. SVG FFI는 follow-up | **PARTIAL** (#50) |
+| 렌더 본문 | studio-host 웹 에디터 + Tauri webview | **Path B** `#50` `Render/NativePageRenderHost` + `NativePageHostView`. 제품 미리보기는 **이 문서 세션**의 `hg_render_page_svg` (`NativePageRaster`). Mock→placeholder. WKWebView / PNG / skia 금지. `showsRenderHostSketch = false` 기본 | **DONE** (SVG wire) |
 | UTI / 파일 연결 | HOP export `net.golbin.hop.hwp` / `.hwpx` | Hangyeol **Owner** `org.hangyeol.*` + HOP UTI **import**. [uti-finder-dock-smoke.md](uti-finder-dock-smoke.md) | **DONE** |
 | 공증 | HOP는 자격 후 signed/notarized dmg (DEVELOPMENT.md) | 문서만. owner `.p8`+Team ID 전까지 실행 금지 | **TODO** (docs) |
 
@@ -65,6 +65,6 @@ Live 회귀(insert/delete/표/`listImages`)는 Real만 SMOKE_OK. [week7-internal
 
 ## 다음 (이 PR 밖)
 
-1. DocumentCore 페이지 SVG/PNG를 `#50` `NativePageRaster` / `NativePageHostView`에 연결 (엔진: [renderer-spike-1pager.md](../engine/renderer-spike-1pager.md), 셸 노트: [native-page-host-phase1.md](native-page-host-phase1.md))
-2. HOP식 sibling temp + rename 저장 (샌드박스 제자리 저장과 맞출 것)
-3. Owner 자격 후 공증 실행
+1. HOP식 sibling temp + rename 저장 (샌드박스 제자리 저장과 맞출 것)
+2. Owner 자격 후 공증 실행
+3. `showsRenderHostSketch`를 켤지는 frontend / 팀장 게이트 (셸 기본은 **false**)

@@ -4,7 +4,7 @@
 **Date:** 2026-09-18  
 **Status:** product FFI. Spike PASS: [renderer-spike-s8-results.md](renderer-spike-s8-results.md).
 
-Read-only **UTF-8 SVG** page preview on the same `hg_engine*`. **PNG / native-skia forbidden.** Save stays `hg_save` / `hg_save_hwpx` clear-before-save. App Views wiring is **개발자2** — this PR does not touch SwiftUI document views.
+Read-only **UTF-8 SVG** page preview on the same `hg_engine*`. **PNG / native-skia forbidden.** Save stays `hg_save` / `hg_save_hwpx` clear-before-save. App shell wiring: `KitRealEngine` / `DocumentSession.renderPageSvg` / `NativePageRaster.previewProvider` — **same document session only**, never `EngineClient.current`.
 
 ## One product symbol
 
@@ -28,7 +28,7 @@ hg_status hg_render_page_svg(
 | Save | Unchanged. Render must not skip `line_segs.clear()` |
 | OOR page | **`HG_CORRUPT` / `CORRUPT`** — addressing error, same as invalid insert/delete indexes. `HG_UNSUPPORTED` is format/version/HWP-write, not a bad index |
 | PNG/skia | Not in the header. Do not enable `native-skia` |
-| Kit | Header copy + Linux C stub in this PR. `RealEngine.renderPageSvg` is ABI coverage. Views = follow-up |
+| Kit | Header copy + Linux C stub. `RealEngine.renderPageSvg` is ABI coverage. App shell: `NativePageRaster` on this `DocumentSession` |
 
 ## Ownership
 

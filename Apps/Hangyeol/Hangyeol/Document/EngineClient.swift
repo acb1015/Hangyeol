@@ -26,6 +26,8 @@ protocol HangyeolLiveSession: HangyeolEngine {
     /// IR bytes for undo when an inverse command cannot be captured (`replaceText`, Real fallback).
     func captureUndoState() throws -> Data
     func restoreUndoState(_ data: Data) throws
+    /// Read-only UTF-8 SVG for `pageIndex` (0-based). Kit `hg_render_page_svg`.
+    func renderPageSvg(pageIndex: UInt32) throws -> Data
 }
 
 extension HangyeolLiveSession {
@@ -69,6 +71,14 @@ extension HangyeolLiveSession {
             defaultValue: "실행 취소 스냅샷"
         ))
     }
+
+    func renderPageSvg(pageIndex: UInt32) throws -> Data {
+        _ = pageIndex
+        throw HangyeolError.notYetImplemented(String(
+            localized: "error.engine.renderPageSvgMock",
+            defaultValue: "페이지 미리보기 (Mock)"
+        ))
+    }
 }
 
 enum EngineClient {
@@ -78,7 +88,8 @@ enum EngineClient {
     private static let holder = Holder()
 
     /// Process-wide factory probe / test seam. **Not** the open document's session.
-    /// File open/save must use `HangyeolDocument.session` (`DocumentSession`).
+    /// File open/save / page preview must use `HangyeolDocument.session` (`DocumentSession`).
+    /// Never call `hg_render_page_svg` against this singleton.
     static var current: any HangyeolEngine {
         get { holder.engine }
         set { holder.engine = newValue }

@@ -145,4 +145,13 @@ final class KitRealEngineTests: XCTestCase {
             .unsupported
         )
     }
+
+    func testRenderPageSvgMapsUnopenedSessionError() {
+        let engine = KitRealEngine()
+        XCTAssertFalse(engine.isOpen)
+        XCTAssertThrowsError(try engine.renderPageSvg(pageIndex: 0)) { error in
+            XCTAssertTrue(error is HangyeolError)
+            XCTAssertFalse(error is HangyeolKitError)
+        }
+    }
 }

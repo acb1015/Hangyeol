@@ -7,8 +7,8 @@ HangyeolKit tracks the engine C ABI. Kit **RealEngine** is live. **`Apps/Hangyeo
 
 ## This week
 
-- [x] **Header sync** — Kit header matches `engine/include/hangyeol_engine.h` on main (symbols, comments, freeze mapping, edit API, `hg_table_info` / `hg_list_tables` / `hg_set_cell_text`, `hg_image_info` / `hg_list_images`).
-- [x] Swift FFI stub declarations cover the synced ABI (`hg_plain_text` / `hg_replace_text` / `hg_save_hwpx` / `hg_insert_text` / `hg_delete_range` / `hg_list_tables` / `hg_set_cell_text` / `hg_list_images` / `hg_last_error`). Methods still throw `notLinked`; C stubs return `HG_UNSUPPORTED` / `NULL`. Table/image UI is frontend-owned (ABI only). See [image-meta.md](engine/image-meta.md).
+- [x] **Header sync** — Kit header matches `engine/include/hangyeol_engine.h` on main (symbols, comments, freeze mapping, edit API, `hg_table_info` / `hg_list_tables` / `hg_set_cell_text`, `hg_image_info` / `hg_list_images`, `hg_render_page_svg`).
+- [x] Swift FFI stub declarations cover the synced ABI (`hg_plain_text` / `hg_replace_text` / `hg_save_hwpx` / `hg_insert_text` / `hg_delete_range` / `hg_list_tables` / `hg_set_cell_text` / `hg_list_images` / `hg_render_page_svg` / `hg_last_error`). Methods still throw `notLinked`; C stubs return `HG_UNSUPPORTED` / `NULL`. Table/image UI is frontend-owned (ABI only). See [image-meta.md](engine/image-meta.md). App page preview uses the same-session Kit path (`NativePageRaster`).
 - [x] C target still compiles with no-op stubs for the new freeze symbols.
 - [x] **Mock stays for rollback.** `MockEngine` is unchanged. `EngineClient.resetToMock()` always reinstalls it.
 

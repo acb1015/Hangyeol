@@ -1,17 +1,17 @@
 # Renderer embed slot — Path B native page host
 
-역할: **개발자2** 셸 설계. 이 PR은 **문서 + Mock 함정만**. 호스트 구현 정본은 **#50**.
+역할: **개발자2** 셸 설계. 호스트 구현 정본은 **#50**. 제품 미리보기는 같은 문서 세션의 `hg_render_page_svg` (`NativePageRaster`).
 
 | | 경로 | 정본 |
 |--|------|------|
 | Protocol | [`Views/HangyeolRenderHosting.swift`](../../Apps/Hangyeol/Hangyeol/Views/HangyeolRenderHosting.swift) | **#48** |
-| Implementation | [`Render/NativePageRenderHost.swift`](../../Apps/Hangyeol/Hangyeol/Render/NativePageRenderHost.swift) · [`Render/NativePageHostView.swift`](../../Apps/Hangyeol/Hangyeol/Render/NativePageHostView.swift) · [`Render/NativePageRaster.swift`](../../Apps/Hangyeol/Hangyeol/Render/NativePageRaster.swift) (preview hook only; **no FFI**, **no native-skia**) | **#50** + hook |
+| Implementation | [`Render/NativePageRenderHost.swift`](../../Apps/Hangyeol/Hangyeol/Render/NativePageRenderHost.swift) · [`Render/NativePageHostView.swift`](../../Apps/Hangyeol/Hangyeol/Render/NativePageHostView.swift) · [`Render/NativePageRaster.swift`](../../Apps/Hangyeol/Hangyeol/Render/NativePageRaster.swift) (`hg_render_page_svg` via **this** `DocumentSession`; **no PNG FFI**, **no native-skia**) | **#50** + SVG wire |
 | Phase1 노트 | [native-page-host-phase1.md](native-page-host-phase1.md) | **#50** |
 
 IA: [hop-ia-swiftui-draft.md](hop-ia-swiftui-draft.md) · 엔진: [renderer-spike-1pager.md](../engine/renderer-spike-1pager.md) · 셸: [hop-shell-checklist.md](hop-shell-checklist.md)
 
-**제품 임베드 = Path B만.** `DocumentCore` → SVG/PNG → AppKit/SwiftUI `NativePageHostView` (`NSViewRepresentable`).  
-**금지:** WKWebView, rhwp studio, `postMessage`, Tauri. `HangyeolRenderHosting.swift` / `NativePageRenderHost`를 이 PR에서 복제하지 않는다.
+**제품 임베드 = Path B만.** `DocumentCore` → UTF-8 SVG (`hg_render_page_svg`) → AppKit/SwiftUI `NativePageHostView` (`NSViewRepresentable`).  
+**금지:** WKWebView, rhwp studio, `postMessage`, Tauri, PNG FFI, `native-skia`. `HangyeolRenderHosting.swift` / `NativePageRenderHost`를 이 PR에서 복제하지 않는다.
 
 ---
 
@@ -31,10 +31,10 @@ DocumentGroup / HangyeolDocument
     ├── StructuredTextView                 showsRenderHostSketch == false
     └── RenderHostView(host:)              Views (#48)
             └── NativePageRenderHost       Render/ (#50)
-                    └── NativePageHostView 이후 SVG/PNG 페이지
+                    └── NativePageHostView  page 0 SVG (`hg_render_page_svg`)
 ```
 
-`attach(document:)`는 그 창의 `DocumentSession`에만 붙는다.
+`attach(document:)`는 그 창의 `DocumentSession`에만 붙는다. 미리보기도 그 세션의 `hg_engine*`만 (`EngineClient.current` 금지). Mock/closed → placeholder. `showsRenderHostSketch = false` 기본.
 
 ---
 
@@ -53,3 +53,4 @@ DocumentGroup / HangyeolDocument
 - `Document/HangyeolNativePageHost*` (제거함 — #50이 정본)
 - `HangyeolRenderHosting.swift` 추가/이동
 - 풀 SVG 디코더, WKWebView, `notarytool`, Views 크롬/L10n
+- `showsRenderHostSketch` 기본 true, PNG FFI, native-skia, Vendor 바이너리 커밋
