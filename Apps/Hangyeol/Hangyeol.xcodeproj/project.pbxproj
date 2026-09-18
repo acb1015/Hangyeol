@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		A10000000000000000000004 /* HangyeolRenderHosting.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* HangyeolRenderHosting.swift */; };
 		A10000000000000000000002 /* RenderHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* RenderHostView.swift */; };
+		B21000000000000000000002 /* NativePageRenderHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21000000000000000000001 /* NativePageRenderHost.swift */; };
+		B21000000000000000000004 /* NativePageHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21000000000000000000003 /* NativePageHostView.swift */; };
+		B21000000000000000000007 /* NativePageRenderHostTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21000000000000000000006 /* NativePageRenderHostTests.swift */; };
 		000000000000000000000001 /* HangyeolApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000002 /* HangyeolApp.swift */; };
 		000000000000000000000003 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000004 /* AppDelegate.swift */; };
 		000000000000000000000005 /* HangyeolCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000006 /* HangyeolCommands.swift */; };
@@ -80,6 +83,9 @@
 /* Begin PBXFileReference section */
 		A10000000000000000000003 /* HangyeolRenderHosting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HangyeolRenderHosting.swift; sourceTree = "<group>"; };
 		A10000000000000000000001 /* RenderHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderHostView.swift; sourceTree = "<group>"; };
+		B21000000000000000000001 /* NativePageRenderHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativePageRenderHost.swift; sourceTree = "<group>"; };
+		B21000000000000000000003 /* NativePageHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativePageHostView.swift; sourceTree = "<group>"; };
+		B21000000000000000000006 /* NativePageRenderHostTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativePageRenderHostTests.swift; sourceTree = "<group>"; };
 		00000000000000000000003C /* Hangyeol.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Hangyeol.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		00000000000000000000003D /* HangyeolTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HangyeolTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000002 /* HangyeolApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HangyeolApp.swift; sourceTree = "<group>"; };
@@ -183,6 +189,7 @@
 			children = (
 				000000000000000000000048 /* App */,
 				000000000000000000000049 /* Document */,
+				B21000000000000000000008 /* Render */,
 				00000000000000000000004A /* Views */,
 				00000000000000000000004B /* Sheets */,
 				00000000000000000000004C /* Export */,
@@ -215,6 +222,15 @@
 				000000000000000000000012 /* HangyeolError.swift */,
 			);
 			path = Document;
+			sourceTree = "<group>";
+		};
+		B21000000000000000000008 /* Render */ = {
+			isa = PBXGroup;
+			children = (
+				B21000000000000000000001 /* NativePageRenderHost.swift */,
+				B21000000000000000000003 /* NativePageHostView.swift */,
+			);
+			path = Render;
 			sourceTree = "<group>";
 		};
 		00000000000000000000004A /* Views */ = {
@@ -303,6 +319,7 @@
 				0000000000000000000000F6 /* ExportTests.swift */,
 				000000000000000000000110 /* HangyeolOpenFailureTests.swift */,
 				00000000000000000000012A /* ErrorSheetUXTests.swift */,
+				B21000000000000000000006 /* NativePageRenderHostTests.swift */,
 			);
 			path = HangyeolTests;
 			sourceTree = "<group>";
@@ -429,6 +446,8 @@
 				000000000000000000000013 /* DocumentWindow.swift in Sources */,
 				A10000000000000000000002 /* RenderHostView.swift in Sources */,
 				A10000000000000000000004 /* HangyeolRenderHosting.swift in Sources */,
+				B21000000000000000000002 /* NativePageRenderHost.swift in Sources */,
+				B21000000000000000000004 /* NativePageHostView.swift in Sources */,
 				000000000000000000000015 /* StructuredTextView.swift in Sources */,
 				000000000000000000000017 /* TableBlockView.swift in Sources */,
 				000000000000000000000019 /* EmptyStateView.swift in Sources */,
@@ -475,6 +494,7 @@
 				0000000000000000000000F7 /* ExportTests.swift in Sources */,
 				000000000000000000000111 /* HangyeolOpenFailureTests.swift in Sources */,
 				000000000000000000000129 /* ErrorSheetUXTests.swift in Sources */,
+				B21000000000000000000007 /* NativePageRenderHostTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

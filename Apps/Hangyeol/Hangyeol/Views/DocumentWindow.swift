@@ -30,8 +30,8 @@ struct DocumentWindow: View {
     @State private var dismissedSaveErrorID: String?
     @State private var exportProgress: ExportProgressPresentation?
 
-    /// Phase0 스케치 플래그. `true`면 본문 대신 `RenderHostView.placeholder`.
-    /// 합의·개발자2 주입 전까지 기본 `false`(`StructuredTextView` 유지).
+    /// Phase1 Path B 플래그. `true`면 `RenderHostView(host:)` + 네이티브 페이지 호스트.
+    /// 기본 `false` — `StructuredTextView` 회귀 유지.
     private let showsRenderHostSketch = false
 
     private var chrome: DocumentChromeState {
@@ -92,7 +92,10 @@ struct DocumentWindow: View {
                     onOpenRecent: openRecent
                 )
             } else if showsRenderHostSketch {
-                RenderHostView.placeholder
+                NativePageHostFactory.renderHostView(
+                    document: document,
+                    onOpenFailure: { presentedError = $0 }
+                )
             } else {
                 StructuredTextView(
                     model: document.model,
