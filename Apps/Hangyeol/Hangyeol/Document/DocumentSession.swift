@@ -93,6 +93,9 @@ final class DocumentSession: ObservableObject, Identifiable, @unchecked Sendable
     /// Real session with an open `hg_engine*` (paragraph `insertText` / `deleteRange`).
     var canEditParagraphs: Bool { canEdit }
 
+    /// Real session with an open `hg_engine*` (read-only `hg_render_page_svg`).
+    var canRenderPagePreview: Bool { canEdit }
+
     func open(data: Data, type: DocumentFileType) throws -> DocumentModel {
         do {
             lastOpenError = nil
@@ -165,6 +168,11 @@ final class DocumentSession: ObservableObject, Identifiable, @unchecked Sendable
 
     func listImages() throws -> [ImageInfo] {
         try requireOpenLiveSessionForImages().listImages()
+    }
+
+    /// Kit `hg_render_page_svg` on **this** session's engine. Never `EngineClient.current`.
+    func renderPageSvg(pageIndex: UInt32) throws -> Data {
+        try requireOpenLiveSessionForPreview().renderPageSvg(pageIndex: pageIndex)
     }
 
     func setCellText(table: UInt32, row: UInt32, col: UInt32, text: String) throws {
@@ -372,6 +380,16 @@ final class DocumentSession: ObservableObject, Identifiable, @unchecked Sendable
             throw HangyeolError.notYetImplemented(String(
                 localized: "error.engine.paragraphMock",
                 defaultValue: "문단 편집 (Mock)"
+            ))
+        }
+        return session
+    }
+
+    private func requireOpenLiveSessionForPreview() throws -> any HangyeolLiveSession {
+        guard canRenderPagePreview, let session = liveSession, session.isOpen else {
+            throw HangyeolError.notYetImplemented(String(
+                localized: "error.engine.renderPageSvgMock",
+                defaultValue: "페이지 미리보기 (Mock)"
             ))
         }
         return session

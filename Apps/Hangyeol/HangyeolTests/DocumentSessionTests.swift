@@ -29,6 +29,9 @@ private final class FakeLiveEngine: HangyeolLiveSession, @unchecked Sendable {
     var setCellCalls: [(UInt32, UInt32, UInt32, String)] = []
     var insertCalls: [(UInt32, UInt32, UInt32, String)] = []
     var deleteCalls: [(UInt32, UInt32, UInt32, UInt32)] = []
+    var pageSvg: Data = Data("<svg xmlns='http://www.w3.org/2000/svg'/>".utf8)
+    var renderPageSvgCalls: [UInt32] = []
+    var renderPageSvgError: Error?
 
     func open(data: Data, type: DocumentFileType) throws -> DocumentModel {
         DocumentModel(
@@ -77,6 +80,14 @@ private final class FakeLiveEngine: HangyeolLiveSession, @unchecked Sendable {
 
     func deleteRange(section: UInt32, paragraph: UInt32, charOffset: UInt32, count: UInt32) throws {
         deleteCalls.append((section, paragraph, charOffset, count))
+    }
+
+    func renderPageSvg(pageIndex: UInt32) throws -> Data {
+        renderPageSvgCalls.append(pageIndex)
+        if let renderPageSvgError {
+            throw renderPageSvgError
+        }
+        return pageSvg
     }
 }
 
@@ -308,6 +319,44 @@ final class DocumentSessionTests: XCTestCase {
         XCTAssertTrue(document.hasUnsavedEdits)
         XCTAssertEqual(document.model.plainText, "replaced")
         XCTAssertEqual(document.model.metadata.title, "제목")
+    }
+
+    func testRenderPageSvgOnBoundSessionDoesNotUseProcessSingleton() throws {
+        let live = FakeLiveEngine()
+        live.pageSvg = Data("<svg id='session'/>".utf8)
+        let session = DocumentSession(engine: live)
+        let other = FakeLiveEngine()
+        other.pageSvg = Data("<svg id='singleton'/>".utf8)
+        EngineClient.current = other
+
+        XCTAssertTrue(session.canRenderPagePreview)
+        let data = try session.renderPageSvg(pageIndex: 0)
+        XCTAssertEqual(data, live.pageSvg)
+        XCTAssertEqual(live.renderPageSvgCalls, [0])
+        XCTAssertTrue(other.renderPageSvgCalls.isEmpty)
+    }
+
+    func testRenderPageSvgOnMockThrowsNotYetImplemented() {
+        let session = DocumentSession(engine: MockEngine())
+        XCTAssertFalse(session.canRenderPagePreview)
+        XCTAssertThrowsError(try session.renderPageSvg(pageIndex: 0)) { error in
+            guard case HangyeolError.notYetImplemented = error else {
+                return XCTFail("expected notYetImplemented, got \(error)")
+            }
+        }
+    }
+
+    func testRenderPageSvgOnClosedLiveSessionThrow() {
+        let live = FakeLiveEngine()
+        live.isOpen = false
+        let session = DocumentSession(engine: live)
+        XCTAssertFalse(session.canRenderPagePreview)
+        XCTAssertThrowsError(try session.renderPageSvg(pageIndex: 0)) { error in
+            guard case HangyeolError.notYetImplemented = error else {
+                return XCTFail("expected notYetImplemented, got \(error)")
+            }
+        }
+        XCTAssertTrue(live.renderPageSvgCalls.isEmpty)
     }
 
     func testCellApisOnMockThrowNotYetImplemented() {

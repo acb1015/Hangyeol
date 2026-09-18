@@ -72,8 +72,8 @@ DocumentWindow
 **정본은 코드** `Apps/Hangyeol/Hangyeol/Views/HangyeolRenderHosting.swift`.
 
 Views는 프로토콜만 본다. Kit/RealEngine 직접 호출 금지.  
-편집은 **기존 `DocumentSession`** (`insertText` / `deleteRange` / `replaceText` / `setCellText` / `listTables` / `canEdit*`).  
-DocumentSession이 문서 진실.
+편집은 **기존 `DocumentSession`** (`insertText` / `deleteRange` / `replaceText` / `setCellText` / `listTables` / `canEdit*` / `renderPageSvg`).  
+DocumentSession이 문서 진실. 페이지 SVG는 **그 세션**의 `hg_engine*`만 (`EngineClient.current` 금지).
 
 표면(요약): `attach` / `detach` · viewport(zoom/fit) · selection · find/reveal · 콜백(`onReady`, `onSelectionChange`, `onViewportChange`, `onOpenFailure`, **`onLoadingChange` 유지**).
 
