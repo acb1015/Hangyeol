@@ -13,15 +13,6 @@ enum NativePageSurface: Equatable {
     case failed
 }
 
-/// Phase1: `hg_render_*` / `render_page_svg_native` FFI가 freeze 헤더에 없음.
-/// 실 SVG 파이프라인은 엔진 심볼 합의 후 이 훅에서 연결.
-enum NativePageRaster {
-    static func preview(from document: HangyeolDocument) -> NativePageSurface? {
-        _ = document
-        return nil
-    }
-}
-
 /// 셸 소유 `HangyeolRenderHosting` 구현. Views/크롬/L10n을 소유하지 않음.
 /// 문서 진실은 `HangyeolDocument.session` (`hg_engine*`). 이 호스트는 파생 미리보기만.
 @MainActor
@@ -125,6 +116,7 @@ final class NativePageRenderHost: ObservableObject, HangyeolRenderHosting {
             return
         }
 
+        // Preview hook only (`NativePageRaster.previewProvider`). No `hg_render_*` here.
         surface = NativePageRaster.preview(from: document) ?? .placeholder
         markReady()
     }

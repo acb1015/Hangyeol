@@ -26,7 +26,10 @@
 ## Phase1 한계
 
 엔진 freeze 헤더에 `hg_render_*` / `render_page_svg_native`가 **없음**.  
-`NativePageRaster.preview`는 항상 `nil`. attach된 비어 있지 않은 문서는 **placeholder**(빈 페이지 + SF Symbol).
+`NativePageRaster.preview` **훅은 준비됨** (`Render/NativePageRaster.swift` injection seam). 기본 `previewProvider == nil` → `preview(from:)`는 `nil` → 비어 있지 않은 문서는 **placeholder**(빈 페이지 + SF Symbol).
+
+**FFI wiring blocked** until 개발자1 `hg_render_*` merge. 이 훅에서 C 심볼 import / `hg_render_*` 호출 / 새 Vendor 링크를 하지 않는다.  
+**native-skia forbidden** (engine §8 크기 참고용만. 제품 경로는 SVG).
 
 | 상태 | 동작 |
 |------|------|
@@ -35,6 +38,6 @@
 | `session.lastOpenError` | `onOpenFailure` 후 throw. `surface = failed` |
 | PNG/SVG bytes | `presentPageImage`가 있으면 `NSImage`로 그림. SVG 디코드 실패 시 placeholder |
 | find/reveal | 표시용. 치환은 DocumentSession |
-| TODO | FFI 합의 후 `NativePageRaster`에서 같은 `hg_engine*` SVG/PNG 조회 |
+| TODO | 개발자1 `hg_render_*` merge **이후**에만 `previewProvider`에 DocumentCore SVG/PNG 연결. native-skia 금지 |
 
 XCFramework 바이너리는 커밋하지 않는다. 실 래스터는 Vendor 재빌드 후 심링크.
