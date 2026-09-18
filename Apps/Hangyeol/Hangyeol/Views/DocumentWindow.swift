@@ -30,6 +30,10 @@ struct DocumentWindow: View {
     @State private var dismissedSaveErrorID: String?
     @State private var exportProgress: ExportProgressPresentation?
 
+    /// Phase0 스케치 플래그. `true`면 본문 대신 `RenderHostView.placeholder`.
+    /// 합의·개발자2 주입 전까지 기본 `false`(`StructuredTextView` 유지).
+    private let showsRenderHostSketch = false
+
     private var chrome: DocumentChromeState {
         DocumentChromeState.make(
             title: document.model.displayTitle,
@@ -87,6 +91,8 @@ struct DocumentWindow: View {
                     onOpenDocument: presentOpenPanel,
                     onOpenRecent: openRecent
                 )
+            } else if showsRenderHostSketch {
+                RenderHostView.placeholder
             } else {
                 StructuredTextView(
                     model: document.model,
