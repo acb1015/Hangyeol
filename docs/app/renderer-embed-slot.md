@@ -5,7 +5,7 @@
 | | 경로 | 정본 |
 |--|------|------|
 | Protocol | [`Views/HangyeolRenderHosting.swift`](../../Apps/Hangyeol/Hangyeol/Views/HangyeolRenderHosting.swift) | **#48** |
-| Implementation | [`Render/NativePageRenderHost.swift`](../../Apps/Hangyeol/Hangyeol/Render/NativePageRenderHost.swift) · [`Render/NativePageHostView.swift`](../../Apps/Hangyeol/Hangyeol/Render/NativePageHostView.swift) | **#50** |
+| Implementation | [`Render/NativePageRenderHost.swift`](../../Apps/Hangyeol/Hangyeol/Render/NativePageRenderHost.swift) · [`Render/NativePageHostView.swift`](../../Apps/Hangyeol/Hangyeol/Render/NativePageHostView.swift) · [`Render/NativePageRaster.swift`](../../Apps/Hangyeol/Hangyeol/Render/NativePageRaster.swift) (preview hook only; **no FFI**, **no native-skia**) | **#50** + hook |
 | Phase1 노트 | [native-page-host-phase1.md](native-page-host-phase1.md) | **#50** |
 
 IA: [hop-ia-swiftui-draft.md](hop-ia-swiftui-draft.md) · 엔진: [renderer-spike-1pager.md](../engine/renderer-spike-1pager.md) · 셸: [hop-shell-checklist.md](hop-shell-checklist.md)

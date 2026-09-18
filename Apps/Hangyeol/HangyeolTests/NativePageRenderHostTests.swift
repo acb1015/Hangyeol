@@ -3,6 +3,16 @@ import XCTest
 
 @MainActor
 final class NativePageRenderHostTests: XCTestCase {
+    override func setUp() async throws {
+        try await super.setUp()
+        NativePageRaster.previewProvider = nil
+    }
+
+    override func tearDown() async throws {
+        NativePageRaster.previewProvider = nil
+        try await super.tearDown()
+    }
+
     func testAttachSignalsLoadingThenReadyWithoutUI() async throws {
         let host = NativePageRenderHost()
         var loading: [Bool] = []
@@ -124,9 +134,40 @@ final class NativePageRenderHostTests: XCTestCase {
     }
 
     func testRasterHookIsNilUntilEngineFFIExists() {
+        XCTAssertNil(NativePageRaster.previewProvider)
         XCTAssertNil(
             NativePageRaster.preview(from: HangyeolDocument(model: MockEngine.sampleDocument()))
         )
+    }
+
+    func testAttachUsesInjectedSvgPreviewWithoutOpenError() async throws {
+        let svg = Data("<svg xmlns='http://www.w3.org/2000/svg'/>".utf8)
+        NativePageRaster.previewProvider = { _ in .svg(svg) }
+
+        let host = NativePageRenderHost()
+        var openFailures: [HangyeolError] = []
+        host.onOpenFailure = { openFailures.append($0) }
+
+        try await host.attach(document: HangyeolDocument(model: MockEngine.sampleDocument()))
+
+        XCTAssertTrue(host.isReady)
+        XCTAssertEqual(host.surface, .svg(svg))
+        XCTAssertTrue(openFailures.isEmpty)
+    }
+
+    func testAttachUsesInjectedPngPreviewWithoutOpenError() async throws {
+        let png = Data([0x89, 0x50, 0x4E, 0x47])
+        NativePageRaster.previewProvider = { _ in .png(png) }
+
+        let host = NativePageRenderHost()
+        var openFailures: [HangyeolError] = []
+        host.onOpenFailure = { openFailures.append($0) }
+
+        try await host.attach(document: HangyeolDocument(model: MockEngine.sampleDocument()))
+
+        XCTAssertTrue(host.isReady)
+        XCTAssertEqual(host.surface, .png(png))
+        XCTAssertTrue(openFailures.isEmpty)
     }
 
     func testFactoryMakeHostStartsDetached() {
