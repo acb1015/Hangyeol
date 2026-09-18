@@ -129,6 +129,16 @@ final class KitRealEngine: HangyeolLiveSession, @unchecked Sendable {
         }
     }
 
+    /// Read-only `hg_render_page_svg` on **this** Kit session (`hg_engine*`).
+    /// Buffer is copied then `hg_free_buffer` via Kit `takeBuffer`. No PNG / native-skia.
+    func renderPageSvg(pageIndex: UInt32) throws -> Data {
+        do {
+            return try kit.renderPageSvg(pageIndex: pageIndex)
+        } catch {
+            throw Self.mapError(error)
+        }
+    }
+
     /// HWPX bytes of the live IR. `hg_save` clears `line_segs` (same as product save).
     /// Called only when a window `UndoManager` is attached, as a fallback when
     /// `textInRange` / `cellText` are unavailable (no peek FFI).

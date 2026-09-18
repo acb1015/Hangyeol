@@ -1,12 +1,12 @@
 import CoreGraphics
 import Foundation
 
-/// Path B Phase1 페이지 표시. DocumentCore SVG/PNG FFI가 열리기 전 스텁 표면.
+/// Path B Phase1 페이지 표시. SVG preview는 `NativePageRaster` → `hg_render_page_svg`.
 enum NativePageSurface: Equatable {
     case idle
     case loading
     case empty
-    /// 엔진 래스터 API 없음. SF Symbol / 빈 페이지.
+    /// 엔진 SVG가 없거나 Mock/실패. SF Symbol / 빈 페이지.
     case placeholder
     case png(Data)
     case svg(Data)
@@ -116,7 +116,8 @@ final class NativePageRenderHost: ObservableObject, HangyeolRenderHosting {
             return
         }
 
-        // Preview hook only (`NativePageRaster.previewProvider`). No `hg_render_*` here.
+        // Product provider: this document's session `hg_render_page_svg` (page 0).
+        // Mock / throw / empty → placeholder. No PNG FFI / native-skia here.
         surface = NativePageRaster.preview(from: document) ?? .placeholder
         markReady()
     }

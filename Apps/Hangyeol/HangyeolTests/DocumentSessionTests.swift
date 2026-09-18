@@ -26,6 +26,8 @@ private final class FakeLiveEngine: HangyeolLiveSession, @unchecked Sendable {
     var replaceCount = 0
     var listedTables: [TableInfo] = []
     var listedImages: [ImageInfo] = []
+    var pageSvg: Data?
+    var renderPageSvgCalls: [UInt32] = []
     var setCellCalls: [(UInt32, UInt32, UInt32, String)] = []
     var insertCalls: [(UInt32, UInt32, UInt32, String)] = []
     var deleteCalls: [(UInt32, UInt32, UInt32, UInt32)] = []
@@ -77,6 +79,14 @@ private final class FakeLiveEngine: HangyeolLiveSession, @unchecked Sendable {
 
     func deleteRange(section: UInt32, paragraph: UInt32, charOffset: UInt32, count: UInt32) throws {
         deleteCalls.append((section, paragraph, charOffset, count))
+    }
+
+    func renderPageSvg(pageIndex: UInt32) throws -> Data {
+        renderPageSvgCalls.append(pageIndex)
+        if let pageSvg {
+            return pageSvg
+        }
+        throw HangyeolError.notYetImplemented("페이지 미리보기")
     }
 }
 
@@ -482,5 +492,40 @@ final class DocumentSessionTests: XCTestCase {
         } else {
             XCTAssertTrue(EngineClient.makeEngine() is MockEngine)
         }
+    }
+
+    func testRenderPageSvgOnMockThrowsNotYetImplemented() {
+        let session = DocumentSession(engine: MockEngine())
+        XCTAssertFalse(session.canRenderPagePreview)
+        XCTAssertThrowsError(try session.renderPageSvg(pageIndex: 0)) { error in
+            guard case HangyeolError.notYetImplemented = error else {
+                return XCTFail("expected notYetImplemented, got \(error)")
+            }
+        }
+    }
+
+    func testRenderPageSvgUsesBoundLiveSessionNotEngineClient() throws {
+        let live = FakeLiveEngine()
+        live.pageSvg = Data("<svg xmlns='http://www.w3.org/2000/svg'/>".utf8)
+        EngineClient.current = MockEngine()
+        let session = DocumentSession(engine: live)
+        XCTAssertTrue(session.canRenderPagePreview)
+        XCTAssertEqual(try session.renderPageSvg(pageIndex: 0), live.pageSvg)
+        XCTAssertEqual(live.renderPageSvgCalls, [0])
+        XCTAssertTrue(EngineClient.current is MockEngine)
+    }
+
+    func testRenderPageSvgClosedLiveSessionIsUnavailable() {
+        let live = FakeLiveEngine()
+        live.isOpen = false
+        live.pageSvg = Data("<svg xmlns='http://www.w3.org/2000/svg'/>".utf8)
+        let session = DocumentSession(engine: live)
+        XCTAssertFalse(session.canRenderPagePreview)
+        XCTAssertThrowsError(try session.renderPageSvg(pageIndex: 0)) { error in
+            guard case HangyeolError.notYetImplemented = error else {
+                return XCTFail("expected notYetImplemented, got \(error)")
+            }
+        }
+        XCTAssertTrue(live.renderPageSvgCalls.isEmpty)
     }
 }

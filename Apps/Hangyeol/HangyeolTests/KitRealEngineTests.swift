@@ -145,4 +145,20 @@ final class KitRealEngineTests: XCTestCase {
             .unsupported
         )
     }
+
+    func testRenderPageSvgMapsKitErrorsWhenSessionClosed() {
+        let engine = KitRealEngine()
+        XCTAssertFalse(engine.isOpen)
+        XCTAssertThrowsError(try engine.renderPageSvg(pageIndex: 0)) { error in
+            guard let hangyeol = error as? HangyeolError else {
+                return XCTFail("expected HangyeolError, got \(error)")
+            }
+            switch hangyeol {
+            case .engineFailed, .corrupt, .unsupported, .notYetImplemented:
+                break
+            default:
+                XCTFail("unexpected mapped error \(hangyeol)")
+            }
+        }
+    }
 }

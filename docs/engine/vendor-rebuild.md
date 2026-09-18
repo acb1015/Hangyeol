@@ -23,13 +23,15 @@ ln -sf /path/to/HangyeolEngine.xcframework \
   Packages/HangyeolKit/Vendor/HangyeolEngine.xcframework
 ```
 
-5. `nm` 확인 — insert / delete / table / image-list 포함:
+5. `nm` 확인 — insert / delete / table / image-list / **page SVG** 포함:
 
 ```bash
 nm -gU engine/target/aarch64-apple-darwin/release/libhangyeol_engine.a | grep ' _hg_'
 # 기대: hg_open hg_save hg_save_hwpx hg_plain_text hg_replace_text
 #       hg_insert_text hg_delete_range hg_list_tables hg_set_cell_text
 #       hg_list_images hg_render_page_svg hg_close hg_free_buffer hg_last_error
+# App Path B preview needs the underscore form on Mach-O:
+#       _hg_render_page_svg   _hg_free_buffer
 # PNG / native-skia symbols must stay absent.
 ```
 

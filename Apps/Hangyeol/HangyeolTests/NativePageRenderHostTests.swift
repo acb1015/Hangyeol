@@ -1,15 +1,74 @@
 import XCTest
 @testable import Hangyeol
 
+private final class PreviewLiveEngine: HangyeolLiveSession, @unchecked Sendable {
+    var isOpen: Bool = true
+    var pageSvg: Data?
+    var renderError: Error?
+
+    func open(data: Data, type: DocumentFileType) throws -> DocumentModel {
+        _ = data
+        return DocumentModel(
+            metadata: DocumentMetadata(title: "live", sourceType: type),
+            blocks: [.paragraph(ParagraphBlock(text: "본문"))]
+        )
+    }
+
+    func save(_ model: DocumentModel, as type: DocumentFileType) throws -> Data {
+        Data("live|\(type.rawValue)|\(model.plainText)".utf8)
+    }
+
+    func replaceText(find: String, replace: String) throws -> Int {
+        _ = find
+        _ = replace
+        return 0
+    }
+
+    func displayModel(type: DocumentFileType, title: String) throws -> DocumentModel {
+        DocumentModel(
+            metadata: DocumentMetadata(title: title, sourceType: type),
+            blocks: [.paragraph(ParagraphBlock(text: "본문"))]
+        )
+    }
+
+    func saveHwpx(to path: String) throws {
+        try Data().write(to: URL(fileURLWithPath: path))
+    }
+
+    func listTables() throws -> [TableInfo] { [] }
+    func listImages() throws -> [ImageInfo] { [] }
+    func setCellText(table: UInt32, row: UInt32, col: UInt32, text: String) throws {
+        _ = (table, row, col, text)
+    }
+    func insertText(section: UInt32, paragraph: UInt32, charOffset: UInt32, text: String) throws {
+        _ = (section, paragraph, charOffset, text)
+    }
+    func deleteRange(section: UInt32, paragraph: UInt32, charOffset: UInt32, count: UInt32) throws {
+        _ = (section, paragraph, charOffset, count)
+    }
+
+    func renderPageSvg(pageIndex: UInt32) throws -> Data {
+        _ = pageIndex
+        if let renderError {
+            throw renderError
+        }
+        if let pageSvg {
+            return pageSvg
+        }
+        throw HangyeolError.notYetImplemented("페이지 미리보기")
+    }
+}
+
 @MainActor
 final class NativePageRenderHostTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
-        NativePageRaster.previewProvider = nil
+        NativePageRaster.previewProvider = NativePageRaster.productPreviewProvider
     }
 
     override func tearDown() async throws {
-        NativePageRaster.previewProvider = nil
+        NativePageRaster.previewProvider = NativePageRaster.productPreviewProvider
+        EngineClient.resetToDefault()
         try await super.tearDown()
     }
 
@@ -133,11 +192,20 @@ final class NativePageRenderHostTests: XCTestCase {
         XCTAssertEqual(host.surface, .svg(svg))
     }
 
-    func testRasterHookIsNilUntilEngineFFIExists() {
-        XCTAssertNil(NativePageRaster.previewProvider)
+    func testProductPreviewReturnsNilForMockSession() {
+        NativePageRaster.installProductPreviewProvider()
+        XCTAssertNotNil(NativePageRaster.previewProvider)
         XCTAssertNil(
             NativePageRaster.preview(from: HangyeolDocument(model: MockEngine.sampleDocument()))
         )
+    }
+
+    func testProductPreviewNilProviderFallsBackToProductThenMockPlaceholder() async throws {
+        NativePageRaster.previewProvider = nil
+        let host = NativePageRenderHost()
+        try await host.attach(document: HangyeolDocument(model: MockEngine.sampleDocument()))
+        XCTAssertEqual(host.surface, .placeholder)
+        XCTAssertNotNil(NativePageRaster.previewProvider)
     }
 
     func testAttachUsesInjectedSvgPreviewWithoutOpenError() async throws {
@@ -168,6 +236,88 @@ final class NativePageRenderHostTests: XCTestCase {
         XCTAssertTrue(host.isReady)
         XCTAssertEqual(host.surface, .png(png))
         XCTAssertTrue(openFailures.isEmpty)
+    }
+
+    func testProductPreviewUsesStubLiveSessionSvgNotEngineClient() async throws {
+        let svg = Data("<svg xmlns='http://www.w3.org/2000/svg'><rect/></svg>".utf8)
+        let live = PreviewLiveEngine()
+        live.pageSvg = svg
+        EngineClient.current = MockEngine()
+        NativePageRaster.previewProvider = NativePageRaster.productPreviewProvider
+
+        let document = HangyeolDocument(
+            model: MockEngine.sampleDocument(),
+            session: DocumentSession(engine: live)
+        )
+        XCTAssertTrue(document.session.canRenderPagePreview)
+        XCTAssertEqual(NativePageRaster.preview(from: document), .svg(svg))
+
+        let host = NativePageRenderHost()
+        var openFailures: [HangyeolError] = []
+        host.onOpenFailure = { openFailures.append($0) }
+        try await host.attach(document: document)
+
+        XCTAssertTrue(host.isReady)
+        XCTAssertEqual(host.surface, .svg(svg))
+        XCTAssertTrue(openFailures.isEmpty)
+        XCTAssertTrue(EngineClient.current is MockEngine)
+    }
+
+    func testProductPreviewReturnsNilWhenLiveThrowsOrEmptyOrNonSvg() {
+        NativePageRaster.previewProvider = NativePageRaster.productPreviewProvider
+        let throwing = PreviewLiveEngine()
+        throwing.renderError = HangyeolError.corrupt
+        XCTAssertNil(
+            NativePageRaster.preview(
+                from: HangyeolDocument(
+                    model: MockEngine.sampleDocument(),
+                    session: DocumentSession(engine: throwing)
+                )
+            )
+        )
+
+        let empty = PreviewLiveEngine()
+        empty.pageSvg = Data()
+        XCTAssertNil(
+            NativePageRaster.preview(
+                from: HangyeolDocument(
+                    model: MockEngine.sampleDocument(),
+                    session: DocumentSession(engine: empty)
+                )
+            )
+        )
+
+        let plain = PreviewLiveEngine()
+        plain.pageSvg = Data("not-svg".utf8)
+        XCTAssertNil(
+            NativePageRaster.preview(
+                from: HangyeolDocument(
+                    model: MockEngine.sampleDocument(),
+                    session: DocumentSession(engine: plain)
+                )
+            )
+        )
+
+        let invalidUTF8 = PreviewLiveEngine()
+        invalidUTF8.pageSvg = Data([0xFF, 0xFE])
+        XCTAssertNil(
+            NativePageRaster.preview(
+                from: HangyeolDocument(
+                    model: MockEngine.sampleDocument(),
+                    session: DocumentSession(engine: invalidUTF8)
+                )
+            )
+        )
+    }
+
+    func testInjectedProviderIsNotOverwrittenByProductInstall() {
+        let svg = Data("<svg xmlns='http://www.w3.org/2000/svg'/>".utf8)
+        NativePageRaster.previewProvider = { _ in .svg(svg) }
+        NativePageRaster.installProductPreviewProvider()
+        XCTAssertEqual(
+            NativePageRaster.preview(from: HangyeolDocument(model: MockEngine.sampleDocument())),
+            .svg(svg)
+        )
     }
 
     func testFactoryMakeHostStartsDetached() {

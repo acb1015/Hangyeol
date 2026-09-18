@@ -163,7 +163,7 @@ public struct HangyeolEngineFFI: HangyeolEngine {
     }
 
     /// Read-only `hg_render_page_svg` (UTF-8 SVG, layer + Screen).
-    /// Live session is `RealEngine.renderPageSvg`. Views wiring is the app.
+    /// Live session is `RealEngine.renderPageSvg`. App: `KitRealEngine` / `NativePageRaster`.
     public func renderPageSvg(pageIndex: UInt32) throws -> Data {
         #if HANGYEOL_ENGINE_LINKED
         _ = pageIndex

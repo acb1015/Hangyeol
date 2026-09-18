@@ -5,12 +5,12 @@
 | | 경로 | 정본 |
 |--|------|------|
 | Protocol | [`Views/HangyeolRenderHosting.swift`](../../Apps/Hangyeol/Hangyeol/Views/HangyeolRenderHosting.swift) | **#48** |
-| Implementation | [`Render/NativePageRenderHost.swift`](../../Apps/Hangyeol/Hangyeol/Render/NativePageRenderHost.swift) · [`Render/NativePageHostView.swift`](../../Apps/Hangyeol/Hangyeol/Render/NativePageHostView.swift) · [`Render/NativePageRaster.swift`](../../Apps/Hangyeol/Hangyeol/Render/NativePageRaster.swift) (preview hook only; **no FFI**, **no native-skia**) | **#50** + hook |
+| Implementation | [`Render/NativePageRenderHost.swift`](../../Apps/Hangyeol/Hangyeol/Render/NativePageRenderHost.swift) · [`Render/NativePageHostView.swift`](../../Apps/Hangyeol/Hangyeol/Render/NativePageHostView.swift) · [`Render/NativePageRaster.swift`](../../Apps/Hangyeol/Hangyeol/Render/NativePageRaster.swift) (product `previewProvider` → **`hg_render_page_svg`** on this document's session; **no PNG FFI**, **no native-skia**) | **#50** + SVG wire |
 | Phase1 노트 | [native-page-host-phase1.md](native-page-host-phase1.md) | **#50** |
 
 IA: [hop-ia-swiftui-draft.md](hop-ia-swiftui-draft.md) · 엔진: [renderer-spike-1pager.md](../engine/renderer-spike-1pager.md) · 셸: [hop-shell-checklist.md](hop-shell-checklist.md)
 
-**제품 임베드 = Path B만.** `DocumentCore` → SVG/PNG → AppKit/SwiftUI `NativePageHostView` (`NSViewRepresentable`).  
+**제품 임베드 = Path B만.** `DocumentCore` → UTF-8 SVG (`hg_render_page_svg`) → AppKit/SwiftUI `NativePageHostView`. PNG FFI / native-skia 없음.  
 **금지:** WKWebView, rhwp studio, `postMessage`, Tauri. `HangyeolRenderHosting.swift` / `NativePageRenderHost`를 이 PR에서 복제하지 않는다.
 
 ---
@@ -31,7 +31,7 @@ DocumentGroup / HangyeolDocument
     ├── StructuredTextView                 showsRenderHostSketch == false
     └── RenderHostView(host:)              Views (#48)
             └── NativePageRenderHost       Render/ (#50)
-                    └── NativePageHostView 이후 SVG/PNG 페이지
+                    └── NativePageHostView `hg_render_page_svg` (page 0); Mock→placeholder
 ```
 
 `attach(document:)`는 그 창의 `DocumentSession`에만 붙는다.

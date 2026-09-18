@@ -220,7 +220,7 @@ public final class RealEngine: HangyeolEngine, @unchecked Sendable {
     /// (layer + `RenderProfile::Screen`). Does not mutate IR for save.
     /// Out-of-range page is engine `HG_CORRUPT` / `CORRUPT`.
     /// Live when linked; `notLinked` when the C stub is compiled in.
-    /// App Views wiring is a follow-up (`docs/engine/hg-render-abi.md`).
+    /// App `KitRealEngine` / `NativePageRaster` call this on the same `hg_engine*`.
     public func renderPageSvg(pageIndex: UInt32) throws -> Data {
         try withSession { engine in
             var outBytes: UnsafeMutablePointer<UInt8>?

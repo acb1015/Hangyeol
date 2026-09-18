@@ -26,6 +26,8 @@ protocol HangyeolLiveSession: HangyeolEngine {
     /// IR bytes for undo when an inverse command cannot be captured (`replaceText`, Real fallback).
     func captureUndoState() throws -> Data
     func restoreUndoState(_ data: Data) throws
+    /// Read-only UTF-8 SVG page preview (`hg_render_page_svg` via Kit). Mock does not implement this.
+    func renderPageSvg(pageIndex: UInt32) throws -> Data
 }
 
 extension HangyeolLiveSession {
@@ -67,6 +69,14 @@ extension HangyeolLiveSession {
         throw HangyeolError.notYetImplemented(String(
             localized: "error.engine.undoSnapshot",
             defaultValue: "실행 취소 스냅샷"
+        ))
+    }
+
+    func renderPageSvg(pageIndex: UInt32) throws -> Data {
+        _ = pageIndex
+        throw HangyeolError.notYetImplemented(String(
+            localized: "error.engine.pagePreview",
+            defaultValue: "페이지 미리보기"
         ))
     }
 }

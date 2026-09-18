@@ -105,7 +105,7 @@ Defined as `hg_status` / `HangyeolStatus`:
 
 `hg_render_page_svg` is **ABI coverage** for the engine SVG preview FFI. Kit `RealEngine.renderPageSvg(pageIndex:)` maps to layer + Screen. Out-of-range page is `CORRUPT`. PNG / native-skia are not in this header. See [docs/engine/hg-render-abi.md](../../docs/engine/hg-render-abi.md).
 
-**Page canvas UI is frontend-owned.** This package does not change `Apps/Hangyeol` Views. After a local Vendor rebuild, Mac `nm` should show `_hg_render_page_svg` and must not show PNG/skia product symbols.
+**Page canvas UI is frontend-owned.** `Apps/Hangyeol` `NativePageRaster` / `KitRealEngine.renderPageSvg` forward to this method on the **same document session**. After a local Vendor rebuild, Mac `nm` should show `_hg_render_page_svg` and must not show PNG/skia product symbols. Do not commit `.xcframework` / `.a` / `.dylib`.
 
 ## What this package is not
 
