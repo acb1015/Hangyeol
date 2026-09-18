@@ -8,7 +8,7 @@ Week-3 order: **header sync → XCFramework vendor path → RealEngine (this pac
 
 ## Engine (팀장3 확정)
 
-- **1순위:** rhwp **DocumentCore** 코어 서브셋 (parser / serial / edit only; renderer · layout · WASM 금지)
+- **1순위:** rhwp **DocumentCore** 코어 서브셋 (parser / serial / edit). 페이지 미리보기는 UTF-8 SVG `hg_render_page_svg`만. PNG / native-skia 금지.
 - **Toolchain:** rustc **≥ 1.89** (Hangyeol product pin; pinned rhwp cargo graph / `aes 0.9.3`; CI uses 1.93.1)
 - **Save:** `hg_save(HWPX)` and freeze `hg_save_hwpx` **must** clear `line_segs` on body + table-cell paragraphs **before** serialize (`hp:linesegarray` count 0). The Rust cdylib implements that; Kit `RealEngine` calls those symbols (it does not re-implement the writer).
 
@@ -16,7 +16,7 @@ Week-3 order: **header sync → XCFramework vendor path → RealEngine (this pac
 
 | Piece | Path | Role |
 |-------|------|------|
-| C ABI (synced) | `Sources/CHangyeolEngine/include/hangyeol_engine.h` | Kit: `hg_open` / `hg_save` / `hg_free_buffer` / `hg_close`. Freeze: `hg_plain_text` / `hg_replace_text` / `hg_save_hwpx` / `hg_insert_text` / `hg_delete_range` / `hg_list_tables` / `hg_set_cell_text` / `hg_list_images` / `hg_last_error` (`hg_table_info`, `hg_image_info`) |
+| C ABI (synced) | `Sources/CHangyeolEngine/include/hangyeol_engine.h` | Kit: `hg_open` / `hg_save` / `hg_free_buffer` / `hg_close`. Freeze: `hg_plain_text` / `hg_replace_text` / `hg_save_hwpx` / `hg_insert_text` / `hg_delete_range` / `hg_list_tables` / `hg_set_cell_text` / `hg_list_images` / `hg_render_page_svg` / `hg_last_error` (`hg_table_info`, `hg_image_info`) |
 | C stub | `Sources/CHangyeolEngine/hangyeol_engine.c` | Compiled **only when the XCFramework is absent**. Returns `HG_UNSUPPORTED` / `NULL` |
 | C shim | `Sources/CHangyeolEngine/shim.c` | Compiled **only when the XCFramework is present**. Header-only clang module; no `hg_*` definitions |
 | `RealEngine` | `Sources/HangyeolKit/RealEngine.swift` | Owns `hg_engine*`; live `hg_*` when linked; `notLinked` fallback when the stub is compiled in |
@@ -61,7 +61,7 @@ Never commit `.xcframework` / `.a` / `.dylib`. `Packages/HangyeolKit/Vendor/` is
 `RealEngine` owns one `hg_engine*` (`hg_open` → `hg_close` in `deinit` / `close()`):
 
 - `open` / `save` (`HangyeolEngine` protocol)
-- `plainText` / `replaceText` / `saveHwpx` / `insertText` / `deleteRange` / `listTables` / `setCellText` / `listImages` / `lastError`
+- `plainText` / `replaceText` / `saveHwpx` / `insertText` / `deleteRange` / `listTables` / `setCellText` / `listImages` / `renderPageSvg` / `lastError`
 
 Error mapping (`hg_status` + `hg_last_error`):
 
@@ -101,10 +101,17 @@ Defined as `hg_status` / `HangyeolStatus`:
 
 **Image UI is frontend-owned.** This package does not render ImageBlock or change `Apps/Hangyeol` Views / Sheets. After a local Vendor rebuild, Mac `nm` should show `_hg_list_images`.
 
+## Page preview SVG (ABI sync only)
+
+`hg_render_page_svg` is **ABI coverage** for the engine SVG preview FFI. Kit `RealEngine.renderPageSvg(pageIndex:)` maps to layer + Screen. Out-of-range page is `CORRUPT`. PNG / native-skia are not in this header. See [docs/engine/hg-render-abi.md](../../docs/engine/hg-render-abi.md).
+
+**Page canvas UI is frontend-owned.** This package does not change `Apps/Hangyeol` Views. After a local Vendor rebuild, Mac `nm` should show `_hg_render_page_svg` and must not show PNG/skia product symbols.
+
 ## What this package is not
 
 - Not a committed XCFramework / `.a` / `.dylib`
 - Not the app `DocumentModel` (blocks/tables). Kit `DocumentModel` is a file-type placeholder; the app adapter maps `plainText()`
 - Not table UI — Views / TableBlock stay in the app; this is header + Swift wrapper sync only
 - Not image UI — Views / ImageBlock stay in the app; this is header + Swift wrapper sync only
+- Not page-canvas UI — Views / NativePageHost stay in the app; this is header + Swift wrapper sync only
 - Not a replacement that deletes `MockEngine` — the app keeps Mock for rollback

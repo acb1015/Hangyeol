@@ -1,7 +1,8 @@
 //! Optional linker probes for the §8 `.a` size table.
 //!
-//! Compiled only with `svg-size-probe` / `native-skia`. Not C ABI — there is
-//! no `hg_render_*`. Default product features do not include this module.
+//! Compiled only with `svg-size-probe` / `native-skia`. Product C ABI SVG is
+//! `hg_render_page_svg` (always linked). Default product features do not
+//! include this module or `native-skia`.
 
 use crate::HangyeolError;
 use rhwp::document_core::DocumentCore;

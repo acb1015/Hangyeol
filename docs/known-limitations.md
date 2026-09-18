@@ -15,13 +15,13 @@
 
 ## Engine (확정)
 
-기존 게이트·문서에서 확인된 **손실·미지원**. BinData extract API·ZIP 폴백 writer·자체 바이너리 파서는 추가하지 않는다. 렌더러는 **현재 엔진에 없음**(아래). 완성 트랙 설계만: [engine/renderer-spike-1pager.md](engine/renderer-spike-1pager.md).
+기존 게이트·문서에서 확인된 **손실·미지원**. BinData extract API·ZIP 폴백 writer·자체 바이너리 파서는 추가하지 않는다. 페이지 미리보기는 **SVG only** (`hg_render_page_svg`). PNG / native-skia는 제품 ABI에 없다: [engine/hg-render-abi.md](engine/hg-render-abi.md).
 
 - **HWP write**: `hg_save(..., HG_FILE_HWP)` → `SAVE_REJECTED` / `HG_UNSUPPORTED`. 저장은 HWPX만. 게이트: `hwp_save_is_rejected`.
 - **Decrypt**: 암호 문서는 `ENCRYPTED` / `HG_PASSWORD`. 복호화·DRM bypass 금지. 메시지 매핑만 (`encrypted_open_message_maps_to_password`); Hangul 암호 픽스처는 요구하지 않는다.
 - **DRM / HWP 3.x / HML**: `UNSUPPORTED_VERSION`. 편집용으로 열지 않는다.
 - **Corrupt / truncated**: `CORRUPT` (F16). 미지원으로 조용히 통과시키지 않는다. 게이트: `f16_truncated_is_corrupt_not_unsupported`.
-- **Renderer**: 제품 C ABI에 렌더러 없음 (`hg_render_*` 미개방). `hg_plain_text`는 IR 본문+표 셀 텍스트만. §8 Path B 스파이크는 **테스트**에서 DocumentCore SVG API를 호출한다: [engine/renderer-spike-s8-results.md](engine/renderer-spike-s8-results.md). 설계: [engine/renderer-spike-1pager.md](engine/renderer-spike-1pager.md).
+- **Renderer**: 제품 C ABI는 **UTF-8 SVG 페이지 미리보기만** (`hg_render_page_svg` → layer + `RenderProfile::Screen`). PNG / native-skia FFI 없음. 같은 `hg_engine*` 읽기; 저장은 여전히 `hg_save` / `hg_save_hwpx` clear-before-save. 범위 밖 페이지 → `HG_CORRUPT`. 앱 Views 연결은 후속. ABI: [engine/hg-render-abi.md](engine/hg-render-abi.md). §8 스파이크: [engine/renderer-spike-s8-results.md](engine/renderer-spike-s8-results.md).
 - **Clear-before-save**: Hangyeol 경로는 섹션/본문 문단/표 셀 문단의 `line_segs`를 비운 뒤 `export_hwpx_native`. 저장본 `hp:linesegarray`는 **0**. 기본 rhwp export는 lineseg를 남기며 Hangyeol 경로가 아니다. 게이트: hub-A replace/insert/delete/table + hub-B keep-on-save.
 - **Image keep-on-save (제품 게이트)**: hub-B (`fixtures/hub_hwpxlib_SimplePicture.hwpx`) 열기 → DocumentCore FFI 텍스트 편집 → `hg_save_hwpx` clear-before-save → 재오픈. ZIP `BinData/` **파일 수·바이트 보존**, `hg_list_images` 개수/메타 유효, `hp:linesegarray`=0. 범위는 기존 DocumentCore export의 hub-B 왕복이다. 게이트: `hub_b_image_keep_on_save_clear_before_save_roundtrip`. 상세: [engine/image-meta.md](engine/image-meta.md).
 - **Image API 한계**: `hg_list_images`는 `Control::Picture` 목록/메타만 (본문 후 중첩 셀). 그림 insert/delete 없음. BinData **extract API 없음** (바이트를 제품 API로 꺼내지 않음). `byte_len`은 IR 길이 힌트일 뿐이다.

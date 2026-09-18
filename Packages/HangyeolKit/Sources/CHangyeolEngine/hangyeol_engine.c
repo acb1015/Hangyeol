@@ -165,6 +165,23 @@ hg_status hg_set_cell_text(
     return HG_UNSUPPORTED;
 }
 
+hg_status hg_render_page_svg(
+    hg_engine *engine,
+    uint32_t page_index,
+    uint8_t **out_bytes,
+    size_t *out_length
+) {
+    (void)engine;
+    (void)page_index;
+    if (out_bytes) {
+        *out_bytes = NULL;
+    }
+    if (out_length) {
+        *out_length = 0;
+    }
+    return HG_UNSUPPORTED;
+}
+
 const char *hg_last_error(void) {
     return NULL;
 }

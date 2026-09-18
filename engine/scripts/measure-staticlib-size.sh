@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # Measure release libhangyeol_engine.a for the §8 renderer spike size table.
 #
-# Default product path: no extra features (SVG APIs are test-only; this .a is
-# the baseline). Optional:
-#   --features svg-size-probe          → SVG symbols referenced from the lib
+# Default product path: SVG page preview via hg_render_page_svg (no extra
+# features). Optional:
+#   --features svg-size-probe          → extra probe symbols
 #   --features native-skia             → rhwp Skia/PNG size reference
 #
 # Host default is the machine triple (Linux CI: x86_64-unknown-linux-gnu).
 # Mac aarch64: HANGYEOL_STATICLIB_TARGET=aarch64-apple-darwin on a Mac host.
 #
-# Does not commit binaries. Does not add hg_render_*.
+# Does not commit binaries. Expects hg_render_page_svg; PNG FFI stays closed.
 #
 # Linux native-skia: rust-lld may need GCC's libstdc++ directory, e.g.
 #   RUSTFLAGS='-C link-arg=-L/usr/lib/gcc/x86_64-linux-gnu/13'
@@ -68,10 +68,19 @@ echo "label=${LABEL}"
 echo "path=${DEST}"
 echo "bytes=${BYTES}"
 if command -v nm >/dev/null 2>&1; then
-  if nm -g "${DEST}" 2>/dev/null | grep -E ' hg_render_' >/dev/null; then
-    echo "hg_render_symbols=PRESENT (FAIL — header/FFI must stay frozen)" >&2
+  NM_OUT="$(nm -g "${DEST}" 2>/dev/null || true)"
+  if ! printf '%s\n' "${NM_OUT}" | grep -E ' _?hg_render_page_svg$' >/dev/null; then
+    echo "hg_render_page_svg=MISSING (FAIL — product FFI must export it)" >&2
     exit 1
   fi
-  echo "hg_render_symbols=absent"
-  echo "hg_symbols=$(nm -g "${DEST}" 2>/dev/null | grep -E ' T _?hg_' | sed 's/.* //' | tr '\n' ' ')"
+  if printf '%s\n' "${NM_OUT}" | grep -E ' _?hg_render_page_png$' >/dev/null; then
+    echo "hg_render_page_png=PRESENT (FAIL — PNG FFI is forbidden)" >&2
+    exit 1
+  fi
+  if [[ "${FEATURES}" != *native-skia* ]] && printf '%s\n' "${NM_OUT}" | grep -i 'skia_safe' >/dev/null; then
+    echo "skia_safe=PRESENT (FAIL — native-skia is not a product feature)" >&2
+    exit 1
+  fi
+  echo "hg_render_page_svg=present"
+  echo "hg_symbols=$(printf '%s\n' "${NM_OUT}" | grep -E ' T _?hg_' | sed 's/.* //' | tr '\n' ' ')"
 fi

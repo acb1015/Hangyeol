@@ -92,7 +92,7 @@ public struct ImageInfo: Sendable, Equatable {
 /// Same boundary as the app `HangyeolEngine` protocol (`open` / `save`).
 /// Freeze edit ABI (`hg_plain_text` / `hg_replace_text` / `hg_save_hwpx` /
 /// `hg_insert_text` / `hg_delete_range` / `hg_list_tables` / `hg_set_cell_text` /
-/// `hg_list_images` / `hg_last_error`) lives on `RealEngine`.
+/// `hg_list_images` / `hg_render_page_svg` / `hg_last_error`) lives on `RealEngine`.
 /// The app wraps this type in `KitRealEngine`; `MockEngine` remains for rollback.
 public protocol HangyeolEngine: Sendable {
     func open(data: Data, type: DocumentFileType) throws -> DocumentModel

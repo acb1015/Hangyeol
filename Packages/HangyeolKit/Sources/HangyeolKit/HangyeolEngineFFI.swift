@@ -162,6 +162,21 @@ public struct HangyeolEngineFFI: HangyeolEngine {
         #endif
     }
 
+    /// Read-only `hg_render_page_svg` (UTF-8 SVG, layer + Screen).
+    /// Live session is `RealEngine.renderPageSvg`. Views wiring is the app.
+    public func renderPageSvg(pageIndex: UInt32) throws -> Data {
+        #if HANGYEOL_ENGINE_LINKED
+        _ = pageIndex
+        throw HangyeolKitError.unimplemented
+        #else
+        var outBytes: UnsafeMutablePointer<UInt8>?
+        var outLength = 0
+        _ = hg_render_page_svg(nil, pageIndex, &outBytes, &outLength)
+        hg_free_buffer(outBytes)
+        throw HangyeolKitError.notLinked
+        #endif
+    }
+
     /// Freeze `hg_last_error`: thread-local string code, or `nil` after success.
     public static func lastError() -> String? {
         HangyeolEngineSupport.lastErrorString()

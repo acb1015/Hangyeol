@@ -110,6 +110,9 @@ final class RealEngineTests: XCTestCase {
         XCTAssertThrowsError(try engine.setCellText(table: 0, row: 0, col: 0, text: "x")) { error in
             XCTAssertEqual(error as? HangyeolKitError, .notLinked)
         }
+        XCTAssertThrowsError(try engine.renderPageSvg(pageIndex: 0)) { error in
+            XCTAssertEqual(error as? HangyeolKitError, .notLinked)
+        }
         XCTAssertNil(engine.lastError())
         engine.close()
     }
@@ -127,6 +130,9 @@ final class RealEngineTests: XCTestCase {
             XCTAssertEqual(error as? HangyeolKitError, .notLinked)
         }
         XCTAssertThrowsError(try ffi.setCellText(table: 0, row: 0, col: 0, text: "x")) { error in
+            XCTAssertEqual(error as? HangyeolKitError, .notLinked)
+        }
+        XCTAssertThrowsError(try ffi.renderPageSvg(pageIndex: 0)) { error in
             XCTAssertEqual(error as? HangyeolKitError, .notLinked)
         }
     }
