@@ -8,7 +8,7 @@ Thin Rust **cdylib** wrapping **`rhwp::document_core::DocumentCore`** only.
 - parser / serial / edit via DocumentCore
 - **no** Hangyeol-owned OLE/HWP binary parser
 - **no** ZIP/XML hand-edit product path
-- **no** renderer / layout / WASM UI **FFI** exports (product ABI today; `hg_render_*` not opened). §8 Path B spike tests call DocumentCore SVG APIs only: [renderer-spike-s8-results.md](../docs/engine/renderer-spike-s8-results.md). Design: [renderer-spike-1pager.md](../docs/engine/renderer-spike-1pager.md)
+- **SVG page preview FFI** `hg_render_page_svg` (layer + `RenderProfile::Screen`). PNG / native-skia are **not** exported. ABI: [hg-render-abi.md](../docs/engine/hg-render-abi.md). §8 Path B spike tests still call DocumentCore SVG APIs: [renderer-spike-s8-results.md](../docs/engine/renderer-spike-s8-results.md)
 
 Pinned rhwp git rev (verified in this crate):
 `cac9b4f7cc743535cd7c00fe4f286abd67e7145b`
@@ -22,7 +22,7 @@ This header is a **superset** of HangyeolKit
 (Kit `hg_open` / `hg_save` / `hg_free_buffer` / `hg_close`) plus kickoff freeze
 edit symbols (`hg_plain_text` / `hg_replace_text` / `hg_save_hwpx` /
 `hg_insert_text` / `hg_delete_range` / `hg_list_tables` / `hg_set_cell_text` /
-`hg_list_images` / `hg_last_error`). Same names — not a third scheme. `hg_insert_text` /
+`hg_list_images` / `hg_last_error` / `hg_render_page_svg`). Same names — not a third scheme. `hg_insert_text` /
 `hg_delete_range` are product gates (known para/offset → `hg_plain_text` →
 `hg_save_hwpx` clear-before-save → 0 `hp:linesegarray` → reopen).
 
@@ -34,6 +34,12 @@ returns index + size/format meta (`hg_image_info`). Hub-B list gate. Not a
 BinData extract API. Keep-on-save of ZIP `BinData/` on the existing
 `hg_save_hwpx` clear-before-save path is a hub-B **product gate**
 ([image-meta.md](../docs/engine/image-meta.md)).
+
+`hg_render_page_svg` is a **read-only** UTF-8 SVG preview of page `page_index`
+(0-based) from the same `hg_engine*`. It maps to
+`render_page_svg_layer_with_profile_native(page, Screen)`. Out-of-range page
+→ `HG_CORRUPT`. Caller frees with `hg_free_buffer`. Save is still only
+`hg_save` / `hg_save_hwpx`. ABI: [hg-render-abi.md](../docs/engine/hg-render-abi.md).
 
 | Freeze code | Kit `hg_status` |
 |-------------|-----------------|
@@ -61,8 +67,10 @@ Kit `hg_save` **must** use this HWPX path (it does in this cdylib).
 rustc --version
 
 cargo test --manifest-path engine/Cargo.toml
-# §8 SVG spike (DocumentCore APIs, no hg_render_*):
+# §8 SVG spike (DocumentCore APIs):
 cargo test --manifest-path engine/Cargo.toml --test render_spike
+# product hg_render_page_svg FFI:
+cargo test --manifest-path engine/Cargo.toml --test render_ffi
 ```
 
 ### Mac Hangul smoke artifacts
@@ -83,6 +91,7 @@ cargo test --manifest-path engine/Cargo.toml hub_a_insert_text_clear_before_save
 cargo test --manifest-path engine/Cargo.toml hub_a_delete_range_clear_before_save_roundtrip -- --exact
 cargo test --manifest-path engine/Cargo.toml hub_b_image_keep_on_save_clear_before_save_roundtrip -- --exact
 cargo test --manifest-path engine/Cargo.toml --test render_spike
+cargo test --manifest-path engine/Cargo.toml --test render_ffi
 ```
 
 The derived HWPX is Apache-2.0 (hub-A / hwpxlib). It is **not** committed. Hangul open smoke is Mac-manual on the Downloads copy (or copy the generated file onto the Mac).
@@ -104,7 +113,8 @@ engine/
   src/error.rs        # freeze ↔ Kit mapping
   include/hangyeol_engine.h
   tests/gates.rs      # hub-A replace/insert/delete/table+clear, hub-B image list + keep-on-save, F14, F16
-  tests/render_spike.rs  # §8 Path B: hub-A SVG + render-then-save (no FFI)
+  tests/render_spike.rs  # §8 Path B: hub-A SVG + render-then-save (DocumentCore APIs)
+  tests/render_ffi.rs    # hg_render_page_svg: hub-A SVG, render-then-save, hub-B, nm
   testdata/out/       # gitignored generated HWPX / spike SVG
   scripts/copy-staticlib-to-release.sh  # deps → release .a (macOS XCFramework)
   scripts/measure-staticlib-size.sh     # §8 release .a size table (host or --target)

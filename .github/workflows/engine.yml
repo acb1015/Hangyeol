@@ -16,8 +16,8 @@ jobs:
           toolchain: "1.93.1"
       - name: Product gates must not be ignored
         run: |
-          if grep -nE '#\[ignore\]' engine/tests/gates.rs engine/tests/render_spike.rs; then
-            echo "engine/tests/gates.rs and render_spike.rs must not use #[ignore] — replace/insert/delete/table/image keep-on-save + linesegarray=0 + §8 SVG spike always run"
+          if grep -nE '#\[ignore\]' engine/tests/gates.rs engine/tests/render_spike.rs engine/tests/render_ffi.rs; then
+            echo "engine/tests/gates.rs, render_spike.rs, and render_ffi.rs must not use #[ignore] — replace/insert/delete/table/image keep-on-save + linesegarray=0 + §8 SVG spike + hg_render_page_svg always run"
             exit 1
           fi
       - name: Test hangyeol_engine

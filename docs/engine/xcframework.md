@@ -1,7 +1,7 @@
 # Apple Silicon XCFramework / staticlib
 
 Hangyeol 엔진(`engine/`)을 **macOS Apple Silicon**용으로 빌드하는 절차.
-렌더러·조판·WASM UI는 포함하지 않는다. 산출물은 `rhwp::document_core::DocumentCore` thin C ABI (`hg_*`) 뿐이다.
+렌더러·조판·WASM UI를 **제품에 임베드하지 않는다.** 산출물은 `rhwp::document_core::DocumentCore` thin C ABI (`hg_*`)이며, 페이지 미리보기는 **UTF-8 SVG** `hg_render_page_svg`만 연다. PNG / native-skia는 넣지 않는다 ([hg-render-abi.md](hg-render-abi.md)).
 
 **이 문서는 Mac 빌더용이다.** Cursor Cloud Linux 등 non-Apple 호스트에서는 `aarch64-apple-darwin` / iOS 타깃 바이너리를 만들 수 없다. 아래 명령은 Apple Silicon Mac + Xcode CLT에서 실행한다.
 
@@ -26,11 +26,11 @@ xcodebuild -version
 
 `engine/Cargo.toml`은 이미 `rhwp`를 `default-features = false`로 고정한다. 빌드 때 다음을 **켜거나 링크하지 말 것**:
 
-- rhwp **renderer** / 조판(layout) 피처
+- rhwp **renderer PNG / Skia** (`native-skia`)
 - **WASM** (`wasm32-unknown-unknown`, wasm-bindgen, rhwp WASM UI)
 - Hangyeol 자체 OLE/HWP 바이너리 파서, ZIP/XML 손편집 저장 경로
 
-산출 XCFramework / `.a` / `.dylib`에는 `hg_*` DocumentCore FFI만 들어간다.
+산출 XCFramework / `.a` / `.dylib`에는 `hg_*` DocumentCore FFI만 들어간다. `hg_render_page_svg`는 기본 rhwp 레이아웃/SVG 경로를 쓰며 **`native-skia`를 켜지 않는다.**
 
 ## 타깃
 
@@ -59,7 +59,7 @@ rustup target add aarch64-apple-darwin
 | **헤더 (정본 ABI)** | 손작성. cbindgen 불필요 | `engine/include/hangyeol_engine.h` |
 | **XCFramework** | `xcodebuild -create-xcframework` | `engine/target/xcframework/HangyeolEngine.xcframework` (`engine/target/` 아래라 커밋되지 않음) |
 
-Kit 쪽 헤더 복사본(`Packages/HangyeolKit/.../hangyeol_engine.h`) 동기화는 **개발자2** 소유. 이 절차는 `engine/include/hangyeol_engine.h`만 XCFramework에 넣는다.
+Kit 쪽 헤더 복사본(`Packages/HangyeolKit/.../hangyeol_engine.h`)은 엔진 ABI와 같이 이 모노레포에서 동기화한다. XCFramework `Headers/`는 `engine/include/hangyeol_engine.h`에서 온다.
 
 ## macOS Apple Silicon 빌드
 
@@ -87,7 +87,8 @@ lipo -info engine/target/aarch64-apple-darwin/release/libhangyeol_engine.a
 nm -gU engine/target/aarch64-apple-darwin/release/libhangyeol_engine.a | grep ' _hg_'
 # 기대: hg_open hg_save hg_save_hwpx hg_plain_text hg_replace_text
 #       hg_insert_text hg_delete_range hg_list_tables hg_set_cell_text
-#       hg_list_images hg_close hg_free_buffer hg_last_error
+#       hg_list_images hg_render_page_svg hg_close hg_free_buffer hg_last_error
+# PNG / native-skia 심볼은 없어야 한다.
 ```
 
 `.dylib`를 XCFramework에 넣을 경우 id를 `@rpath`로 맞춘다:
@@ -125,7 +126,8 @@ XCFramework 산출 (커밋하지 않음): `engine/target/xcframework/HangyeolEng
 nm -gU engine/target/aarch64-apple-darwin/release/libhangyeol_engine.a | grep ' _hg_'
 # 확인됨: hg_open hg_save hg_save_hwpx hg_plain_text hg_replace_text
 #         hg_insert_text hg_delete_range hg_list_tables hg_set_cell_text
-#         hg_list_images hg_close hg_free_buffer hg_last_error
+#         hg_list_images hg_render_page_svg hg_close hg_free_buffer hg_last_error
+# PNG / native-skia 심볼은 없어야 한다.
 ```
 
 ## XCFramework 생성
@@ -231,7 +233,7 @@ ln -s /Users/acb/Hangyeol-xcf-build/engine/target/xcframework/HangyeolEngine.xcf
 앱 링크 후 확인:
 
 1. HangyeolKit은 Xcode 제품이다. Kit이 이미 Vendor XCFramework를 링크한다. **바이너리는 커밋하지 않는다.**
-2. C ABI 정본은 `engine/include/hangyeol_engine.h` (XCFramework `Headers/`에 복사됨). Kit 헤더 미러는 개발자2가 동기화한다.
+2. C ABI 정본은 `engine/include/hangyeol_engine.h` (XCFramework `Headers/`에 복사됨). Kit 헤더 미러는 같은 모노레포에서 엔진과 동기화한다.
 3. Rust `staticlib`를 앱에 넣을 때 링커가 `iconv` / `System` 정도를 요구할 수 있다. **렌더러·WASM 라이브러리로 메우지 말 것.**
 4. cdylib를 쓸 경우 `@rpath` + Embed & Sign.
 5. Mac 스모크: `fixtures/hub_hwpxlib_SimpleTable.hwpx` (manifest **`hub-A`**) 열기 → `1`을 `HGPOC99`로 바꾸기 → HWPX 저장 → `hp:linesegarray` = 0.

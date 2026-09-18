@@ -5,7 +5,7 @@
 **Plan:** [renderer-spike-1pager.md](renderer-spike-1pager.md) §8  
 **Verdict:** **PASS** (engine tests + size table). HOP visual oracle remains **Mac-manual**.
 
-FFI header frozen: no `hg_render_*`, no app wiring, no Vendor XCFramework commit. Default product features stay SVG-only (no `native-skia`).
+FFI header: `hg_render_page_svg` is the follow-on product ABI ([hg-render-abi.md](hg-render-abi.md)). This spike itself did not open FFI. Default product features stay SVG-only (no `native-skia`).
 
 ## PASS/FAIL
 
@@ -86,10 +86,11 @@ Do **not** add WKWebView studio, Tauri, or `vendor/rhwp-core` WASM to Hangyeol.
 
 ## What this does not open
 
-- `hg_render_*` C ABI (separate agreement after this PASS).
 - Vendor `.xcframework` / `.a` / `.dylib` commits.
 - `native-skia` on the default lib.
 - Hangyeol 셸 WYSIWYG / IME on the page canvas.
+
+Product FFI after this PASS: [hg-render-abi.md](hg-render-abi.md) (`hg_render_page_svg`).
 
 ## Tests
 

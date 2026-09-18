@@ -1,6 +1,7 @@
-//! §8 Path B native SVG spike (lead-approved). DocumentCore render APIs only.
+//! §8 Path B native SVG spike (lead-approved). DocumentCore render APIs.
 //!
-//! Not FFI: `hangyeol_engine.h` stays frozen (no `hg_render_*`). Not app wiring.
+//! Product C ABI `hg_render_page_svg` lives in `render_ffi.rs` (SVG only).
+//! This file keeps the original DocumentCore spike (no app wiring).
 //! rhwp pin: `cac9b4f7cc743535cd7c00fe4f286abd67e7145b`.
 
 use hangyeol_engine::{
@@ -63,10 +64,7 @@ fn zip_bindata_entries(hwpx: &[u8]) -> Vec<(String, Vec<u8>)> {
 }
 
 fn assert_svg_non_empty(label: &str, svg: &str) {
-    assert!(
-        !svg.trim().is_empty(),
-        "{label}: SVG must be non-empty"
-    );
+    assert!(!svg.trim().is_empty(), "{label}: SVG must be non-empty");
     let head: String = svg.chars().take(120).collect();
     assert!(
         svg.contains("<svg"),
@@ -105,13 +103,19 @@ fn assert_image_meta_valid(infos: &[HgImageInfo]) {
     );
 }
 
+/// Product header exports SVG preview only (PNG / native-skia stay closed).
+/// Full FFI gates live in `render_ffi.rs`; this keeps the §8 spike file.
 #[test]
-fn ffi_header_frozen_no_hg_render() {
+fn ffi_header_svg_only_no_png() {
     let header = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("include/hangyeol_engine.h");
     let text = std::fs::read_to_string(&header).expect("hangyeol_engine.h");
     assert!(
-        !text.contains("hg_render_"),
-        "§8 freezes the C ABI: no hg_render_* in {header:?}"
+        text.contains("hg_render_page_svg"),
+        "product ABI must export hg_render_page_svg in {header:?}"
+    );
+    assert!(
+        !text.contains("hg_render_page_png"),
+        "PNG FFI must stay closed in {header:?}"
     );
 }
 

@@ -1,9 +1,10 @@
 //! Thin Hangyeol FFI over `rhwp::document_core::DocumentCore`.
 //!
-//! No OLE/HWP binary parser of our own, no ZIP/XML product writer, no
-//! renderer / layout / WASM UI **FFI** exports (`hg_render_*` is not in the
-//! header). §8 spike tests call DocumentCore SVG APIs directly. Save always
-//! clears `line_segs` (verified Hangyeol recipe) before `export_hwpx_native`.
+//! No OLE/HWP binary parser of our own, no ZIP/XML product writer, no WASM
+//! UI. Read-only SVG page preview is `hg_render_page_svg` (layer +
+//! `RenderProfile::Screen`). PNG / native-skia are not exported. §8 spike
+//! tests still call DocumentCore SVG APIs directly. Save always clears
+//! `line_segs` (verified Hangyeol recipe) before `export_hwpx_native`.
 //!
 //! Image-meta *list* (`hg_list_images`) walks `Control::Picture` in document
 //! order and returns index + `href` / `img_dim` / format meta. No BinData
@@ -15,10 +16,10 @@ mod error;
 mod size_probe;
 
 pub use error::{HangyeolError, HgFileType, HgStatus};
-#[cfg(feature = "svg-size-probe")]
-pub use size_probe::spike_link_svg_page0;
 #[cfg(feature = "native-skia")]
 pub use size_probe::spike_link_png_page0;
+#[cfg(feature = "svg-size-probe")]
+pub use size_probe::spike_link_svg_page0;
 
 use error::{clear_last_error, last_error_c_str, set_last_error};
 use rhwp::document_core::DocumentCore;
@@ -28,6 +29,7 @@ use rhwp::model::document::Document;
 use rhwp::model::image::Picture;
 use rhwp::model::paragraph::Paragraph;
 use rhwp::model::table::{Cell, Table};
+use rhwp::paint::RenderProfile;
 use rhwp::parser::{detect_format, FileFormat};
 use std::ffi::{c_char, CStr};
 use std::panic::{self, AssertUnwindSafe};
@@ -598,9 +600,20 @@ pub fn open_bytes(bytes: &[u8]) -> Result<DocumentCore, HangyeolError> {
     open_bytes_inner(bytes)
 }
 
-/// Plain text from IR body + table cells (no renderer).
+/// Plain text from IR body + table cells (not a page preview).
 pub fn plain_text(core: &DocumentCore) -> String {
     collect_plain_text(core.document())
+}
+
+/// Read-only UTF-8 SVG for `page_index` (0-based).
+///
+/// Product path: layer + `RenderProfile::Screen`. Out-of-range /
+/// render failure → **CORRUPT** (same four statuses as invalid
+/// insert/delete indexes). Does not replace `save_hwpx_bytes`.
+pub fn render_page_svg(core: &DocumentCore, page_index: u32) -> Result<Vec<u8>, HangyeolError> {
+    core.render_page_svg_layer_with_profile_native(page_index, RenderProfile::Screen)
+        .map(|svg| svg.into_bytes())
+        .map_err(|_| HangyeolError::Corrupt)
 }
 
 /// `replace_all_native` including table cells. Returns replacement count.
@@ -918,6 +931,24 @@ pub unsafe extern "C" fn hg_set_cell_text(
     })
 }
 
+/// Read-only SVG page preview. Same buffer ownership as `hg_plain_text`.
+#[no_mangle]
+pub unsafe extern "C" fn hg_render_page_svg(
+    engine: *mut hg_engine,
+    page_index: u32,
+    out_bytes: *mut *mut u8,
+    out_length: *mut usize,
+) -> HgStatus {
+    ffi_status(|| {
+        write_out_buf(out_bytes, out_length, ptr::null_mut(), 0);
+        let engine = take_engine(engine)?;
+        let bytes = render_page_svg(&engine.core, page_index)?;
+        let (ptr, len) = leak_buffer(bytes);
+        write_out_buf(out_bytes, out_length, ptr, len);
+        Ok(ok())
+    })
+}
+
 #[no_mangle]
 pub extern "C" fn hg_last_error() -> *const c_char {
     last_error_c_str()
@@ -1119,7 +1150,11 @@ mod tests {
         assert!(collect_plain_text(core.document()).contains("HGIMG99"));
 
         let exported = export_hwpx_cleared(&mut core).expect("clear-before-save");
-        assert_eq!(count_linesegarray(&exported), 0, "hp:linesegarray must be 0");
+        assert_eq!(
+            count_linesegarray(&exported),
+            0,
+            "hp:linesegarray must be 0"
+        );
 
         let saved_bins = zip_bindata_entries(&exported);
         assert_eq!(saved_bins.len(), original_bins.len());

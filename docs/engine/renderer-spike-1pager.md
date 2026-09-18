@@ -2,7 +2,7 @@
 
 **Audience:** 개발자1 (engine) · 팀장 승인용  
 **Date:** 2026-09-18  
-**Status:** design + **§8 Path B code spike (PASS).** Results: [renderer-spike-s8-results.md](renderer-spike-s8-results.md). FFI/`hg_render_*` still not opened.
+**Status:** design + **§8 Path B code spike (PASS).** Product FFI: [hg-render-abi.md](hg-render-abi.md) (`hg_render_page_svg`, SVG only).
 
 Hangyeol을 [HOP](https://github.com/golbin/hop) **가이드**로 쓸 수 있는 한글 앱으로 완성하는 트랙. HOP를 fork/치환하지 않는다. Bundle ID `app.hangyeol.mac` · **HWPX 기본 저장** · DocumentCore FFI · clear-before-save는 유지한다. 2026-09-18 팀장: 기존 렌더러/조판/WASM **금지 해제**, rhwp render path를 제품 완성 트랙으로 연다. **대형 재작성 금지** — 합의 전 설계.
 

@@ -216,6 +216,26 @@ public final class RealEngine: HangyeolEngine, @unchecked Sendable {
         }
     }
 
+    /// Read-only page preview: UTF-8 SVG via `hg_render_page_svg`
+    /// (layer + `RenderProfile::Screen`). Does not mutate IR for save.
+    /// Out-of-range page is engine `HG_CORRUPT` / `CORRUPT`.
+    /// Live when linked; `notLinked` when the C stub is compiled in.
+    /// App Views wiring is a follow-up (`docs/engine/hg-render-abi.md`).
+    public func renderPageSvg(pageIndex: UInt32) throws -> Data {
+        try withSession { engine in
+            var outBytes: UnsafeMutablePointer<UInt8>?
+            var outLength = 0
+            let status = withUnsafeMutablePointer(to: &outBytes) { bytesPtr in
+                hg_render_page_svg(engine, pageIndex, bytesPtr, &outLength)
+            }
+            return try HangyeolEngineSupport.takeBuffer(
+                status: status,
+                bytes: outBytes,
+                length: outLength
+            )
+        }
+    }
+
     /// Freeze `hg_last_error` for the last failed call on this thread, or `nil` after success.
     public func lastError() -> String? {
         HangyeolEngineSupport.lastErrorString()

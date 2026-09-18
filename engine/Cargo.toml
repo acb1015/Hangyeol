@@ -3,7 +3,7 @@ name = "hangyeol_engine"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Thin Hangyeol C ABI wrapping rhwp::document_core::DocumentCore (parser / serial / edit only)"
+description = "Thin Hangyeol C ABI wrapping rhwp::document_core::DocumentCore (parser / serial / edit + SVG page preview)"
 license = "MIT"
 publish = false
 repository = "https://github.com/stupid1potato/Hangyeol"
@@ -24,7 +24,6 @@ native-skia = ["rhwp/native-skia"]
 rhwp = { git = "https://github.com/edwardkim/rhwp.git", rev = "cac9b4f7cc743535cd7c00fe4f286abd67e7145b", default-features = false }
 
 [dev-dependencies]
-# Same pin as [dependencies]. Tests call DocumentCore render APIs directly
-# (not hg_*). Needed to name `rhwp::paint::RenderProfile`.
+# Same pin as [dependencies]. Spike tests still name `rhwp::paint::RenderProfile`.
 rhwp = { git = "https://github.com/edwardkim/rhwp.git", rev = "cac9b4f7cc743535cd7c00fe4f286abd67e7145b", default-features = false }
 zip = { version = "2", default-features = false, features = ["deflate"] }

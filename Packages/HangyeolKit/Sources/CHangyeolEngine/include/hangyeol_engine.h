@@ -15,6 +15,8 @@
  *      plus product hg_insert_text / hg_delete_range
  *      plus table: hg_list_tables / hg_set_cell_text
  *      plus image-meta list: hg_list_images (see docs/engine/image-meta.md)
+ *      plus page preview: hg_render_page_svg (UTF-8 SVG; see
+ *      docs/engine/hg-render-abi.md)
  *
  * Kit mapping (tables):
  *   hg_list_tables     → TableBlock addressing. `hg_table_info.index` is the
@@ -32,14 +34,21 @@
  *                        `width`/`height` + `format` / `bin_data_id` / `href`
  *                        are size/format meta (no BinData extract API).
  *
+ * Kit mapping (page preview):
+ *   hg_render_page_svg → UTF-8 SVG for `page_index` (0-based). Maps to
+ *                        layer + RenderProfile::Screen. Caller frees with
+ *                        hg_free_buffer. Out of range → HG_CORRUPT. PNG /
+ *                        native-skia are not exported. Views are frontend-owned.
+ *
  * Freeze string codes ↔ Kit hg_status (1:1):
  *   ENCRYPTED            ↔ HG_PASSWORD
  *   UNSUPPORTED_VERSION  ↔ HG_UNSUPPORTED   (HWP 3.x, DRM, HML, out-of-scope format)
  *   SAVE_REJECTED        ↔ HG_UNSUPPORTED   (e.g. hg_save(..., HG_FILE_HWP) — HWPX-only write)
  *   CORRUPT              ↔ HG_CORRUPT       (truncated / unknown / malformed; F16)
  *
- * Engine: rhwp DocumentCore only (parser / serial / edit).
- * rustc ≥ 1.88. No renderer / layout / WASM UI is exported.
+ * Engine: rhwp DocumentCore (parser / serial / edit) plus read-only SVG
+ * page preview (`hg_render_page_svg` → layer + RenderProfile::Screen).
+ * rustc ≥ 1.88. PNG / native-skia are not exported. No WASM UI.
  *
  * Save contract: hg_save (HWPX) and hg_save_hwpx MUST clear every paragraph
  * and table-cell `line_segs` before serialize so the ZIP XML contains 0
@@ -153,7 +162,8 @@ hg_status hg_save(
     size_t *out_length
 );
 
-/** Release a buffer returned by hg_save / hg_plain_text. NULL is a no-op. */
+/** Release a buffer returned by hg_save / hg_plain_text / hg_render_page_svg.
+ *  NULL is a no-op. */
 void hg_free_buffer(uint8_t *bytes);
 
 /** Release an engine session. NULL is a no-op. */
@@ -270,6 +280,25 @@ hg_status hg_set_cell_text(
     uint32_t row,
     uint32_t col,
     const char *text
+);
+
+/**
+ * Read-only page preview as UTF-8 SVG (layer + RenderProfile::Screen).
+ *
+ * Does not mutate IR for save; `hg_save` / `hg_save_hwpx` still clear
+ * `line_segs`. Same buffer ownership as hg_plain_text: on HG_OK, *out_bytes
+ * is an engine-owned buffer of *out_length bytes; free with hg_free_buffer.
+ *
+ * `page_index` is 0-based. Out of range → HG_CORRUPT / CORRUPT (same four
+ * statuses as invalid insert/delete indexes — not HG_UNSUPPORTED).
+ *
+ * PNG / native-skia are not exported. See docs/engine/hg-render-abi.md.
+ */
+hg_status hg_render_page_svg(
+    hg_engine *engine,
+    uint32_t page_index,
+    uint8_t **out_bytes,
+    size_t *out_length
 );
 
 /**
