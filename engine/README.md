@@ -8,7 +8,7 @@ Thin Rust **cdylib** wrapping **`rhwp::document_core::DocumentCore`** only.
 - parser / serial / edit via DocumentCore
 - **no** Hangyeol-owned OLE/HWP binary parser
 - **no** ZIP/XML hand-edit product path
-- **no** renderer / layout / WASM UI exports (product ABI today). Completion-track design: [renderer-spike-1pager.md](../docs/engine/renderer-spike-1pager.md)
+- **no** renderer / layout / WASM UI **FFI** exports (product ABI today; `hg_render_*` not opened). §8 Path B spike tests call DocumentCore SVG APIs only: [renderer-spike-s8-results.md](../docs/engine/renderer-spike-s8-results.md). Design: [renderer-spike-1pager.md](../docs/engine/renderer-spike-1pager.md)
 
 Pinned rhwp git rev (verified in this crate):
 `cac9b4f7cc743535cd7c00fe4f286abd67e7145b`
@@ -61,6 +61,8 @@ Kit `hg_save` **must** use this HWPX path (it does in this cdylib).
 rustc --version
 
 cargo test --manifest-path engine/Cargo.toml
+# §8 SVG spike (DocumentCore APIs, no hg_render_*):
+cargo test --manifest-path engine/Cargo.toml --test render_spike
 ```
 
 ### Mac Hangul smoke artifacts
@@ -80,6 +82,7 @@ cargo test --manifest-path engine/Cargo.toml hub_a_replace_clear_before_save_rou
 cargo test --manifest-path engine/Cargo.toml hub_a_insert_text_clear_before_save_roundtrip -- --exact
 cargo test --manifest-path engine/Cargo.toml hub_a_delete_range_clear_before_save_roundtrip -- --exact
 cargo test --manifest-path engine/Cargo.toml hub_b_image_keep_on_save_clear_before_save_roundtrip -- --exact
+cargo test --manifest-path engine/Cargo.toml --test render_spike
 ```
 
 The derived HWPX is Apache-2.0 (hub-A / hwpxlib). It is **not** committed. Hangul open smoke is Mac-manual on the Downloads copy (or copy the generated file onto the Mac).
@@ -101,6 +104,8 @@ engine/
   src/error.rs        # freeze ↔ Kit mapping
   include/hangyeol_engine.h
   tests/gates.rs      # hub-A replace/insert/delete/table+clear, hub-B image list + keep-on-save, F14, F16
-  testdata/out/       # gitignored generated HWPX
+  tests/render_spike.rs  # §8 Path B: hub-A SVG + render-then-save (no FFI)
+  testdata/out/       # gitignored generated HWPX / spike SVG
   scripts/copy-staticlib-to-release.sh  # deps → release .a (macOS XCFramework)
+  scripts/measure-staticlib-size.sh     # §8 release .a size table (host or --target)
 ```

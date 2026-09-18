@@ -2,7 +2,7 @@
 
 **Audience:** 개발자1 (engine) · 팀장 승인용  
 **Date:** 2026-09-18  
-**Status:** design only — **코드 실험은 팀장 승인 후**. 이 PR은 문서만.
+**Status:** design + **§8 Path B code spike (PASS).** Results: [renderer-spike-s8-results.md](renderer-spike-s8-results.md). FFI/`hg_render_*` still not opened.
 
 Hangyeol을 [HOP](https://github.com/golbin/hop) **가이드**로 쓸 수 있는 한글 앱으로 완성하는 트랙. HOP를 fork/치환하지 않는다. Bundle ID `app.hangyeol.mac` · **HWPX 기본 저장** · DocumentCore FFI · clear-before-save는 유지한다. 2026-09-18 팀장: 기존 렌더러/조판/WASM **금지 해제**, rhwp render path를 제품 완성 트랙으로 연다. **대형 재작성 금지** — 합의 전 설계.
 
@@ -95,12 +95,12 @@ WKWebView(또는 Tauri)에 `rhwp-studio` + WASM `rhwp-core`를 올리고, HOP처
 
 ## 8. Spike verification plan (lead 승인 후, 최소 코드)
 
-이 문서는 구현이 아니다. 승인 후 **작은** 실험만:
+팀장 Path B 승인 후 실행. **결과표·size·HOP 큐:** [renderer-spike-s8-results.md](renderer-spike-s8-results.md) (**PASS**, 2026-09-18).
 
-1. `engine/` 임시 테스트(제품 `hg_*` 헤더 동결 유지): hub-A에 `render_page_svg_native(0)` 및 `render_page_svg_layer_with_profile_native(0, Screen)` → SVG non-empty. **FFI/앱 연결 없음.**
-2. 같은 픽스처를 HOP studio Canvas2D(또는 rhwp-studio)와 눈으로 대조 — oracle, embed 아님.
-3. 렌더 **직후** 기존 `hub_a_replace_clear_before_save_roundtrip` / hub-B keep-on-save: `hp:linesegarray` = 0 유지.
-4. release `.a` size: 현재 vs SVG 호출 링크 vs (참고) `native-skia`. 기본 실험은 SVG.
+1. `engine/tests/render_spike.rs` (제품 `hg_*` 헤더 동결): hub-A에 `render_page_svg_native(0)` 및 `render_page_svg_layer_with_profile_native(0, Screen)` → SVG non-empty. **FFI/앱 연결 없음.**
+2. 같은 픽스처를 HOP studio Canvas2D(또는 rhwp-studio)와 눈으로 대조 — oracle, embed 아님. **CI 없음 → Mac 수동 큐** (결과 문서).
+3. 렌더 **직후** 기존 `hub_a_replace_clear_before_save_roundtrip` / hub-B keep-on-save: `hp:linesegarray` = 0 유지 (`render_spike`가 같은 코어에서 재현).
+4. release `.a` size: 현재 vs SVG 호출 링크 vs (참고) `native-skia`. 기본 실험은 SVG. 측정 스크립트: `engine/scripts/measure-staticlib-size.sh`.
 5. 하지 않음: Vendor 커밋, WKWebView studio 임베드, Bundle ID/`hg_save` 계약 변경, Hangyeol 셸 WYSIWYG.
 
 합격: SVG 페이지 1장 + 저장 게이트 유지 + size 숫자. 그다음 FFI 심볼은 별도 합의.

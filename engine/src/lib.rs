@@ -1,8 +1,9 @@
 //! Thin Hangyeol FFI over `rhwp::document_core::DocumentCore`.
 //!
 //! No OLE/HWP binary parser of our own, no ZIP/XML product writer, no
-//! renderer / layout / WASM UI exports. Save always clears `line_segs`
-//! (verified Hangyeol recipe) before `export_hwpx_native`.
+//! renderer / layout / WASM UI **FFI** exports (`hg_render_*` is not in the
+//! header). §8 spike tests call DocumentCore SVG APIs directly. Save always
+//! clears `line_segs` (verified Hangyeol recipe) before `export_hwpx_native`.
 //!
 //! Image-meta *list* (`hg_list_images`) walks `Control::Picture` in document
 //! order and returns index + `href` / `img_dim` / format meta. No BinData
@@ -10,8 +11,14 @@
 //! hub-B product gate. Fixture: hub-B.
 
 mod error;
+#[cfg(any(feature = "svg-size-probe", feature = "native-skia"))]
+mod size_probe;
 
 pub use error::{HangyeolError, HgFileType, HgStatus};
+#[cfg(feature = "svg-size-probe")]
+pub use size_probe::spike_link_svg_page0;
+#[cfg(feature = "native-skia")]
+pub use size_probe::spike_link_png_page0;
 
 use error::{clear_last_error, last_error_c_str, set_last_error};
 use rhwp::document_core::DocumentCore;
